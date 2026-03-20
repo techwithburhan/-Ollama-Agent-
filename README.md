@@ -1,7 +1,68 @@
-# 🤖 Ollama Agent — Complete Setup Documentation
+<div align="center">
 
-> **Created by @techwithburhan**
-> A full-stack offline AI chat application powered by Ollama, React, Node.js & MongoDB
+# 🤖 Ollama Agent
+
+### Your Fully Offline AI Chat Assistant
+
+![React](https://img.shields.io/badge/React-18.2-61DAFB?style=for-the-badge&logo=react&logoColor=black)
+![Node.js](https://img.shields.io/badge/Node.js-18+-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
+![MongoDB](https://img.shields.io/badge/MongoDB-6+-47A248?style=for-the-badge&logo=mongodb&logoColor=white)
+![Ollama](https://img.shields.io/badge/Ollama-Local_LLM-FF6B35?style=for-the-badge)
+![JWT](https://img.shields.io/badge/JWT-Auth-000000?style=for-the-badge&logo=jsonwebtokens)
+![GSAP](https://img.shields.io/badge/GSAP-3.12-88CE02?style=for-the-badge)
+
+**A production-ready, full-stack offline AI chat application — no API costs, no data leaks, runs 100% on your machine.**
+
+[🚀 Quick Start](#-quick-start) • [📸 Features](#-features) • [📁 Structure](#-project-structure) • [🌐 API Docs](#-api-reference) • [☁️ AWS EC2](#️-aws-ec2-deployment) • [🐳 Docker](#-docker---coming-soon) • [☸️ Kubernetes](#️-kubernetes---coming-soon)
+
+---
+
+</div>
+
+## 📖 About the Project
+
+**Ollama Agent** is a fully offline, full-stack AI chat application that lets you run powerful Large Language Models (LLMs) directly on your own machine — no internet required, no API costs, and complete data privacy.
+
+Built with a modern **glassmorphism UI**, real-time **streaming responses**, **voice input/output**, and **document attachment** — it delivers a ChatGPT-like experience entirely on your local system.
+
+Whether you are a developer exploring local AI, a student learning full-stack development, or an enterprise user who needs a private AI assistant — Ollama Agent gives you a production-ready foundation to build on.
+
+---
+
+## ✨ Features
+
+| Feature | Description |
+|---------|-------------|
+| 🔒 **100% Offline & Private** | Your data never leaves your machine |
+| ⚡ **Real-time Streaming** | Token-by-token responses via Server-Sent Events (SSE) |
+| 🎤 **Voice Input** | Speak your prompts — Speech-to-Text built into the browser |
+| 🔊 **Text-to-Speech** | AI responses read aloud automatically |
+| 📎 **Document Attachment** | Attach PDF, TXT, CSV, JSON, code files and ask questions |
+| 🤖 **Multi-Model Support** | Switch between llama2, mistral, llama3, codellama, gemma, phi |
+| 💬 **Chat History** | Conversations saved to MongoDB per user |
+| 🔐 **JWT Authentication** | Secure signup/login with bcrypt password hashing |
+| 🎨 **Glassmorphism UI** | Dark theme with GSAP animations and glowing accents |
+| 🗂️ **Chat Management** | Create, load, and delete past conversations |
+| 📱 **Responsive Layout** | Collapsible sidebar + full-height chat area |
+
+---
+
+## 🛠️ Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| **Frontend** | React.js 18, React Router v6 |
+| **Animations** | GSAP 3 |
+| **Styling** | CSS Variables, Glassmorphism |
+| **Backend** | Node.js, Express.js |
+| **Database** | MongoDB, Mongoose |
+| **Auth** | JWT + bcryptjs |
+| **AI Engine** | Ollama (Local LLM) |
+| **Voice Input** | Web Speech API (browser native) |
+| **Voice Output** | SpeechSynthesis API (browser native) |
+| **File Reading** | FileReader API (browser native) |
+| **HTTP Client** | Axios |
+| **Streaming** | Server-Sent Events (SSE) |
 
 ---
 
@@ -9,32 +70,32 @@
 
 ```
 ollama-agent/
-├── frontend/                  # React.js frontend
+├── frontend/                      # React.js 18 Frontend
 │   ├── public/
 │   │   └── index.html
 │   ├── src/
 │   │   ├── context/
-│   │   │   └── AuthContext.js
+│   │   │   └── AuthContext.js     # Global auth state + JWT
 │   │   ├── pages/
-│   │   │   ├── Login.js
-│   │   │   ├── Signup.js
-│   │   │   └── Chat.js
-│   │   ├── App.js
-│   │   ├── index.js
-│   │   └── index.css
+│   │   │   ├── Login.js           # Login page with GSAP animations
+│   │   │   ├── Signup.js          # Signup page with GSAP animations
+│   │   │   └── Chat.js            # Main chat (voice + attachments)
+│   │   ├── App.js                 # Router + protected routes
+│   │   ├── index.js               # React entry point
+│   │   └── index.css              # Glassmorphism + CSS variables
 │   └── package.json
 │
-├── backend/                   # Node.js + Express backend
+├── backend/                       # Node.js + Express.js Backend
 │   ├── models/
-│   │   ├── User.js
-│   │   └── Chat.js
+│   │   ├── User.js                # User schema (bcrypt hashing)
+│   │   └── Chat.js                # Chat + message schema
 │   ├── routes/
-│   │   ├── auth.js
-│   │   └── chat.js
+│   │   ├── auth.js                # /signup /login /me endpoints
+│   │   └── chat.js                # /message /history /models endpoints
 │   ├── middleware/
-│   │   └── auth.js
-│   ├── server.js
-│   ├── .env
+│   │   └── auth.js                # JWT protect middleware
+│   ├── server.js                  # Express app entry point
+│   ├── .env                       # Environment variables (never commit!)
 │   └── package.json
 │
 └── README.md
@@ -44,68 +105,52 @@ ollama-agent/
 
 ## ✅ Prerequisites
 
-Before starting, make sure you have the following installed:
+Make sure the following are installed before you begin:
 
-| Tool | Version | Download |
-|------|---------|----------|
+| Tool | Min Version | Download |
+|------|------------|---------|
 | Node.js | v18+ | https://nodejs.org |
-| MongoDB | v6+ | https://mongodb.com |
+| MongoDB | v6+ | https://mongodb.com/try/download/community |
 | Ollama | Latest | https://ollama.ai |
 | Git | Any | https://git-scm.com |
 
 ---
 
-## 🚀 Step 1 — Install & Start Ollama
+## 🚀 Quick Start
 
-### Install Ollama
+### Step 1 — Install & Run Ollama
+
 ```bash
-# Linux / macOS
+# macOS / Linux
 curl -fsSL https://ollama.ai/install.sh | sh
 
-# Windows
-# Download from: https://ollama.ai/download/windows
+# Windows → Download from: https://ollama.ai/download/windows
 ```
 
-### Pull a Model (choose one)
+**Pull a model** (choose one based on your RAM):
+
 ```bash
-# Llama 2 (recommended, 3.8GB)
-ollama pull llama2
-
-# Mistral (faster, 4.1GB)
-ollama pull mistral
-
-# Llama 3 (best quality, 4.7GB)
-ollama pull llama3
-
-# Phi-2 (smallest, 1.7GB — good for low-RAM)
-ollama pull phi
+ollama pull llama2        # General purpose — 3.8 GB  ✅ Recommended
+ollama pull mistral       # Fast & efficient — 4.1 GB
+ollama pull llama3        # Best quality    — 4.7 GB
+ollama pull codellama     # Code focused    — 3.8 GB
+ollama pull phi           # Smallest/fastest — 1.7 GB  (Low RAM)
 ```
 
-### Start Ollama Server
+**Start the Ollama server:**
+
 ```bash
 ollama serve
 ```
 
-### Verify Ollama is Running
-Open your browser and go to: http://localhost:11434
-You should see: **"Ollama is running"**
-
-Or test via terminal:
-```bash
-curl http://localhost:11434/api/generate -d '{
-  "model": "llama2",
-  "prompt": "Hello!",
-  "stream": false
-}'
-```
+> ✅ Verify: Open http://localhost:11434 — you should see **"Ollama is running"**
 
 ---
 
-## 🗄️ Step 2 — Install & Start MongoDB
+### Step 2 — Start MongoDB
 
-### Option A: Local MongoDB
 ```bash
-# macOS (with Homebrew)
+# macOS (Homebrew)
 brew tap mongodb/brew
 brew install mongodb-community
 brew services start mongodb-community
@@ -115,334 +160,324 @@ sudo apt-get install -y mongodb
 sudo systemctl start mongodb
 sudo systemctl enable mongodb
 
-# Windows
-# Download from: https://www.mongodb.com/try/download/community
-# Run as a service after installation
-```
-
-### Option B: MongoDB Atlas (Cloud — Free)
-1. Go to https://cloud.mongodb.com
-2. Create a free cluster
-3. Get your connection string:
-   `mongodb+srv://username:password@cluster.mongodb.net/ollama-agent`
-4. Replace `MONGO_URI` in `.env` with this string
-
-### Verify MongoDB is Running
-```bash
+# Verify MongoDB is running
 mongosh
-# You should see the MongoDB shell prompt
-# Type: show dbs
-# Type: exit
 ```
+
+> 💡 **Cloud option:** Use [MongoDB Atlas](https://cloud.mongodb.com) free tier and paste the connection string into your `.env` file.
 
 ---
 
-## ⚙️ Step 3 — Setup Backend (Node.js)
+### Step 3 — Setup Backend
 
-### Navigate to backend folder
 ```bash
 cd ollama-agent/backend
-```
 
-### Install Dependencies
-```bash
+# Install dependencies
 npm install
+
+# Generate a secure JWT secret key
+node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
 ```
 
-### Configure Environment Variables
-Edit the `.env` file:
+**Edit `backend/.env`:**
+
 ```env
-PORT=5000
+PORT=5005
 MONGO_URI=mongodb://localhost:27017/ollama-agent
-JWT_SECRET=your_super_secret_key_make_it_long_and_random_12345
+JWT_SECRET=paste_your_generated_64byte_hex_key_here
 OLLAMA_API=http://localhost:11434/api
-OLLAMA_MODEL=llama2
+OLLAMA_MODEL=llama2:latest
 ```
 
-> ⚠️ **Important:** Change `JWT_SECRET` to a long random string in production!
+> ⚠️ **Never commit `.env` to Git.** It is already in `.gitignore`.
 
-### Start the Backend
+**Start the backend:**
 
-**Development mode (auto-restart on changes):**
 ```bash
+# Development (auto-restart on changes)
 npm run dev
-```
 
-**Production mode:**
-```bash
+# Production
 npm start
 ```
 
-You should see:
+**Expected output:**
 ```
 ✅ MongoDB Connected
-🚀 Server running on http://localhost:5000
-```
-
-### Test Backend API
-```bash
-# Health check
-curl http://localhost:5000
-
-# Test signup
-curl -X POST http://localhost:5000/api/auth/signup \
-  -H "Content-Type: application/json" \
-  -d '{"username":"testuser","email":"test@test.com","password":"123456"}'
+🚀 Server running on http://localhost:5005
 ```
 
 ---
 
-## 🎨 Step 4 — Setup Frontend (React.js)
+### Step 4 — Setup Frontend
 
-### Navigate to frontend folder
 ```bash
 cd ollama-agent/frontend
-```
 
-### Install Dependencies
-```bash
+# Install dependencies
 npm install
-```
 
-> This installs: React, React Router, Axios, GSAP, Lucide React, React Markdown
+# Fix macOS proxy issue (create frontend/.env)
+echo "DANGEROUSLY_DISABLE_HOST_CHECK=true" > .env
+echo "WDS_SOCKET_HOST=127.0.0.1" >> .env
+echo "WDS_SOCKET_PORT=3000" >> .env
 
-### Start the Frontend
-```bash
+# Start the frontend
 npm start
 ```
 
-The browser will automatically open: **http://localhost:3000**
+> ✅ Browser opens automatically at **http://localhost:3000**
 
 ---
 
-## 🔗 Step 5 — Connect Frontend to Backend
+### Step 5 — Run Everything
 
-The `package.json` already has a proxy configured:
-```json
-"proxy": "http://localhost:5000"
+Open **3 terminals** and run:
+
+```bash
+# Terminal 1 — Ollama
+ollama serve
+
+# Terminal 2 — Backend
+cd ollama-agent/backend && npm run dev
+
+# Terminal 3 — Frontend
+cd ollama-agent/frontend && npm start
 ```
 
-This means all `/api/...` calls from React will automatically go to `http://localhost:5000/api/...`
-
-**No extra configuration needed!** ✅
+Then open **http://localhost:3000**, sign up, and start chatting! 🎉
 
 ---
 
-## 🌐 API Endpoints Reference
+## 🌐 API Reference
 
-### Auth Routes
-
-| Method | Endpoint | Description | Body |
-|--------|----------|-------------|------|
-| POST | `/api/auth/signup` | Create new account | `{username, email, password}` |
-| POST | `/api/auth/login` | Login to account | `{email, password}` |
-| GET | `/api/auth/me` | Get current user | — (needs token) |
-
-### Chat Routes (All require Bearer token)
+### Auth Routes (Public)
 
 | Method | Endpoint | Description | Body |
 |--------|----------|-------------|------|
-| POST | `/api/chat/message` | Send message to Ollama | `{message, chatId?, model?}` |
-| GET | `/api/chat/history` | Get all chat history | — |
-| GET | `/api/chat/:chatId` | Load specific chat | — |
-| DELETE | `/api/chat/:chatId` | Delete a chat | — |
-| GET | `/api/chat/models/list` | List Ollama models | — |
+| `POST` | `/api/auth/signup` | Create new account | `{username, email, password}` |
+| `POST` | `/api/auth/login` | Login | `{email, password}` |
+| `GET` | `/api/auth/me` | Get current user | Bearer token required |
+
+### Chat Routes (Bearer Token Required)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/chat/message` | Send message to Ollama (SSE streaming) |
+| `GET` | `/api/chat/history` | Get all chats for the user |
+| `GET` | `/api/chat/:chatId` | Load a specific chat |
+| `DELETE` | `/api/chat/:chatId` | Delete a chat |
+| `GET` | `/api/chat/models/list` | List available Ollama models |
+
+**Test with curl:**
+
+```bash
+# Signup
+curl -X POST http://localhost:5005/api/auth/signup \
+  -H "Content-Type: application/json" \
+  -d '{"username":"testuser","email":"test@test.com","password":"123456"}'
+
+# Login
+curl -X POST http://localhost:5005/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@test.com","password":"123456"}'
+```
 
 ---
 
-## 🧪 Testing the Full Flow
+## ☁️ AWS EC2 Deployment
 
-1. Open **http://localhost:3000**
-2. Click **"Create one"** to sign up with a new account
-3. Fill in username, email, password → Click **"Create account"**
-4. You'll be redirected to the chat page
-5. Type a message and press **Enter**
-6. Watch the AI respond in real-time with streaming!
+### Recommended Instance Types
+
+| Model | RAM Needed | EC2 Instance | vCPUs | Est. Cost/mo |
+|-------|-----------|--------------|-------|--------------|
+| phi (1.7 GB) | 4 GB | `t3.medium` | 2 | ~$30 |
+| llama2 / mistral | 8 GB | `t3.large` | 2 | ~$60 |
+| llama3 / codellama | 16 GB | `t3.xlarge` | 4 | ~$120 |
+| Multiple models | 32 GB | `m5.2xlarge` | 8 | ~$280 |
+
+### Minimum Specs
+
+```
+RAM     : 8 GB minimum (16 GB recommended)
+vCPUs   : 2 minimum (4 recommended)
+Storage : 30 GB gp3 EBS (50 GB recommended)
+OS      : Ubuntu 22.04 LTS (x86_64)
+```
+
+### Security Group Inbound Rules
+
+| Port | Protocol | Source | Purpose |
+|------|----------|--------|---------|
+| 22 | TCP | Your IP only | SSH |
+| 80 | TCP | 0.0.0.0/0 | HTTP |
+| 443 | TCP | 0.0.0.0/0 | HTTPS |
+| 3000 | TCP | 0.0.0.0/0 | React (dev) |
+| 5005 | TCP | 0.0.0.0/0 | Backend (dev) |
+| 11434 | TCP | 127.0.0.1/32 | Ollama (local only) |
+
+### EC2 Setup Script (Ubuntu 22.04)
+
+```bash
+# Connect to EC2
+ssh -i your-key.pem ubuntu@your-ec2-public-ip
+
+# Update system
+sudo apt-get update && sudo apt-get upgrade -y
+
+# Install Node.js 18
+curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+sudo apt-get install -y nodejs
+
+# Install MongoDB
+sudo apt-get install -y mongodb
+sudo systemctl start mongodb && sudo systemctl enable mongodb
+
+# Install Ollama
+curl -fsSL https://ollama.ai/install.sh | sh
+ollama serve &
+ollama pull llama2
+
+# Clone & run project
+git clone https://github.com/techwithburhan/ollama-agent.git
+cd ollama-agent/backend && npm install && npm start &
+cd ../frontend && npm install && npm run build
+```
+
+---
+
+## 🐳 Docker — Coming Soon
+
+```
+╔══════════════════════════════════════════════════════════════╗
+║                                                              ║
+║   🚧  Docker setup guide, Dockerfile, and                   ║
+║       docker-compose.yml will be added here.                ║
+║                                                              ║
+╚══════════════════════════════════════════════════════════════╝
+```
+
+---
+
+## ☸️ Kubernetes — Coming Soon
+
+```
+╔══════════════════════════════════════════════════════════════╗
+║                                                              ║
+║   🚧  Kubernetes manifests, Helm charts, and                ║
+║       EKS/GKE deployment steps will be added here.          ║
+║                                                              ║
+╚══════════════════════════════════════════════════════════════╝
+```
+
+---
+
+## 🏗️ Terraform — Coming Soon
+
+```
+╔══════════════════════════════════════════════════════════════╗
+║                                                              ║
+║   🚧  Terraform IaC scripts for AWS infrastructure          ║
+║       (EC2, VPC, ALB, Route53) will be added here.          ║
+║                                                              ║
+╚══════════════════════════════════════════════════════════════╝
+```
+
+---
+
+## 🎯 Interview Questions — Coming Soon
+
+```
+╔══════════════════════════════════════════════════════════════╗
+║                                                              ║
+║   🚧  Curated interview Q&A covering Node.js, React,        ║
+║       MongoDB, Docker, Kubernetes, and AI/LLM topics        ║
+║       will be added here.                                    ║
+║                                                              ║
+╚══════════════════════════════════════════════════════════════╝
+```
 
 ---
 
 ## 🐞 Troubleshooting
 
-### ❌ "Ollama is not running" error
-```bash
-# Make sure Ollama is running
-ollama serve
-
-# Check if port 11434 is open
-curl http://localhost:11434
-```
-
-### ❌ MongoDB connection error
-```bash
-# Check if MongoDB is running
-sudo systemctl status mongodb   # Linux
-brew services list | grep mongo  # macOS
-
-# Restart MongoDB
-sudo systemctl restart mongodb
-```
-
-### ❌ "CORS error" in browser
-Make sure both servers are running:
-- Backend: http://localhost:5000
-- Frontend: http://localhost:3000
-
-### ❌ Model not found error
-```bash
-# List installed models
-ollama list
-
-# Pull the model mentioned in your .env
-ollama pull llama2
-```
-
-### ❌ Port already in use
-```bash
-# Kill process on port 5000
-lsof -ti:5000 | xargs kill -9   # macOS/Linux
-netstat -ano | findstr :5000     # Windows (then Task Manager > End task)
-
-# Kill process on port 3000
-lsof -ti:3000 | xargs kill -9
-```
-
-### ❌ npm install fails
-```bash
-# Clear npm cache and retry
-npm cache clean --force
-rm -rf node_modules package-lock.json
-npm install
-```
-
----
-
-## 🔧 Changing the AI Model
-
-### Method 1: From the UI
-Use the **model dropdown** in the top header of the chat page
-
-### Method 2: Via .env
-Edit `backend/.env`:
-```env
-OLLAMA_MODEL=mistral
-```
-
-### Available models to pull:
-```bash
-ollama pull llama2      # General purpose
-ollama pull llama3      # Best quality
-ollama pull mistral     # Fast & good
-ollama pull codellama   # Code focused
-ollama pull gemma       # Google's model
-ollama pull phi         # Smallest/fastest
-```
-
----
-
-## 🚀 Running Everything at Once
-
-Create a script `start.sh` in the root folder:
-```bash
-#!/bin/bash
-echo "Starting Ollama Agent..."
-
-# Start Ollama
-ollama serve &
-echo "✅ Ollama started"
-
-# Start MongoDB
-sudo systemctl start mongodb
-echo "✅ MongoDB started"
-
-# Start Backend
-cd backend && npm run dev &
-echo "✅ Backend started on port 5000"
-
-# Start Frontend
-cd ../frontend && npm start &
-echo "✅ Frontend started on port 3000"
-
-echo "🚀 All services running!"
-echo "Open: http://localhost:3000"
-```
-
-Make it executable:
-```bash
-chmod +x start.sh
-./start.sh
-```
+| Error | Cause | Fix |
+|-------|-------|-----|
+| `EADDRINUSE :5000` | Port in use (AirPlay on macOS) | `lsof -ti:5000 \| xargs kill -9` or change PORT in `.env` |
+| `allowedHosts` error | Node.js version mismatch | Add `DANGEROUSLY_DISABLE_HOST_CHECK=true` to `frontend/.env` |
+| `net::ERR_FAILED` on login | CORS blocked on macOS | Use manual `res.header()` CORS instead of `cors()` package |
+| Login fails with correct password | Email case mismatch | Use `email.toLowerCase().trim()` in login route |
+| Ollama not responding | Server not running | Run `ollama serve` in a separate terminal |
+| MongoDB connection error | Service stopped | `brew services start mongodb-community` (macOS) |
+| Model not found | Not pulled yet | `ollama pull llama2:latest` |
+| Chat not streaming | Proxy misconfigured | Use full URL `http://localhost:5005` in fetch() calls |
 
 ---
 
 ## 📦 Production Build
 
-### Build React for production:
 ```bash
-cd frontend
-npm run build
-```
+# Build React for production
+cd frontend && npm run build
 
-### Serve the build with Express:
-Add this to `backend/server.js`:
-```javascript
+# Add to backend/server.js to serve the build
 const path = require('path');
-
-// Serve static files from React build
 app.use(express.static(path.join(__dirname, '../frontend/build')));
-
-// Catch-all route for React
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
 });
 ```
 
-Now your entire app runs on http://localhost:5000 🎉
+Now your entire app runs on a single port: **http://localhost:5005** 🎉
 
 ---
 
-## 🔐 Security Notes for Production
+## 🔐 Security Checklist
 
-1. **Change JWT_SECRET** to a long random string:
-   ```bash
-   node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
-   ```
-
-2. **Use environment variables** — never commit `.env` to Git
-
-3. **Add `.env` to `.gitignore`**:
-   ```
-   node_modules/
-   .env
-   frontend/build/
-   ```
-
-4. **Use HTTPS** in production with Nginx + Let's Encrypt
-
-5. **Rate limit your API** — add `express-rate-limit`:
-   ```bash
-   npm install express-rate-limit
-   ```
+- [ ] Change `JWT_SECRET` to a randomly generated 64-byte hex string
+- [ ] Never commit `.env` to Git (already in `.gitignore`)
+- [ ] Keep Ollama API on `localhost` only (not exposed publicly)
+- [ ] Use HTTPS in production (Nginx + Let's Encrypt)
+- [ ] Restrict MongoDB to localhost in production
+- [ ] Add rate limiting: `npm install express-rate-limit`
 
 ---
 
-## 📞 Tech Stack Summary
+## ⭐ Support the Project
 
-| Layer | Technology |
-|-------|-----------|
-| Frontend | React.js 18, React Router v6 |
-| Styling | CSS Variables, Glassmorphism |
-| Animations | GSAP 3 |
-| Backend | Node.js, Express.js |
-| Database | MongoDB + Mongoose |
-| Auth | JWT (JSON Web Tokens) + bcryptjs |
-| AI Engine | Ollama (local LLM) |
-| HTTP Client | Axios |
-| Streaming | Server-Sent Events (SSE) |
+If you found this project helpful:
+
+- 👍 **Give a thumbs up** on YouTube
+- 🔔 **Subscribe** to the channel
+- 🔗 **Follow** on LinkedIn
+- ⭐ **Star** this GitHub repository
+
+> Every bit of support helps create more free DevOps & AI content! 🙏
 
 ---
 
-## 👨‍💻 Created By
+## 📲 Connect with @techwithburhan
 
-**@techwithburhan**
+<div align="center">
 
-> Built with ❤️ using React, Node.js, MongoDB & Ollama
+| Platform | Link |
+|----------|------|
+| 🎬 YouTube — DevOps \| AI \| AWS Cloud | [youtube.com/@TechWithBurhanHQ](https://www.youtube.com/@TechWithBurhanHQ) |
+| 🎬 YouTube — CCNA \| CCNP \| Networking | [youtube.com/@codewithburhan1](https://youtube.com/@codewithburhan1) |
+| 💼 LinkedIn | [linkedin.com/in/techwithburhan](https://linkedin.com/in/techwithburhan) |
+| 📸 Instagram | [instagram.com/techwithburhan](https://instagram.com/techwithburhan) |
+| 🌐 Agency Website | [techdeployers.com](https://techdeployers.com) |
+| 🐙 GitHub | [github.com/techwithburhan](https://github.com/techwithburhan) |
+
+</div>
+
+---
+
+<div align="center">
+
+**Built with ❤️ by [@techwithburhan](https://github.com/techwithburhan)**
+
+*React • Node.js • MongoDB • Ollama • GSAP*
+
+</div>
