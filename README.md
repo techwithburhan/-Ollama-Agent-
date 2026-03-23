@@ -442,8 +442,6 @@ ollama-agent/
 
 ## 📋 Why We Used Each Manifest File
 
-## 📋 Why We Used Each Manifest File
-
 ### namespace.yaml
 Isolates the entire Ollama Agent application in its own Kubernetes namespace — separating it from other applications running on the same cluster.
 
