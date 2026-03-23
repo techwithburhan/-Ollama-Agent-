@@ -404,6 +404,17 @@ ollama-agent/
         └── storageclass.yaml
 
 ```
+## 🤔 The Problem Without Kubernetes
+- Without Kubernetes, running this project in production looks like this:
+```code
+❌ App gets high traffic → server crashes → manual restart needed
+❌ New version deployed → app goes down for users during update
+❌ Container crashes → nobody knows until users complain
+❌ Need more capacity → manually SSH into server and scale
+❌ One server failure → entire app goes down
+❌ Different configs for dev, staging, production → human errors
+```
+
 ## 📋 What Each File Does
 
 | 📄 File                         | 📌 Purpose |
