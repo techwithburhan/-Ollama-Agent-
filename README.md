@@ -449,18 +449,37 @@ Now your entire app runs on a single port: **http://localhost:5005** 🎉
 - [ ] Add rate limiting: `npm install express-rate-limit`
 
 ---
-
-If your resume shows this full stack:
-
-Ollama Agent Project
-─ ✅ Full Stack App (React + Node + MongoDB)
-─ ✅ Docker + Multistage builds
-─ ✅ docker-compose for local dev
-─ ✅ GitHub Actions CI/CD pipeline
-─ ✅ Kubernetes manifests (deploy, svc, hpa, ingress, secret)
-─ ✅ Terraform for AWS infrastructure
-─ ✅ Deployed live on AWS EC2 or EKS
-─ ✅ Monitoring with Prometheus + Grafana
+## Ollama Agent Project
+```code
+├── ✅ Full Stack Application
+│   ├── ⚛️ Frontend: React.js
+│   ├── 🖥️ Backend: Node.js + Express
+│   └── 🗄️ Database: MongoDB
+│
+├── 🐳 Containerization
+│   ├── Docker (Multi-stage builds)
+│   └── docker-compose (Local Development)
+│
+├── 🔁 CI/CD Pipeline
+│   └── GitHub Actions (Build, Test, Deploy)
+│
+├── ☸️ Kubernetes Deployment
+│   ├── Deployment
+│   ├── Service
+│   ├── HPA (Auto Scaling)
+│   ├── Ingress
+│   └── Secrets
+│
+├── ☁️ Infrastructure (IaC)
+│   └── Terraform (AWS Provisioning)
+│
+├── 🌍 Cloud Deployment
+│   └── AWS (EC2 / EKS)
+│
+└── 📊 Monitoring
+    ├── Prometheus
+    └── Grafana
+```
 
 ## 🏆 The Project That Gets You Hired
 
