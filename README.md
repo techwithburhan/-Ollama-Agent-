@@ -480,15 +480,6 @@ Now your entire app runs on a single port: **http://localhost:5005** 🎉
     ├── Prometheus
     └── Grafana
 ```
-
-## 🏆 The Project That Gets You Hired
-
-If you found this project helpful:
-
-- 👍 **Give a thumbs up** on YouTube
-- 🔔 **Subscribe** to the channel
-- 🔗 **Follow** on LinkedIn
-- ⭐ **Star** this GitHub repository
 ---
 
 ## ⭐ Support the Project
