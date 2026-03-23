@@ -376,12 +376,8 @@ cd ../frontend && npm install && npm run build
 ║                                                              ║
 ╚══════════════════════════════════════════════════════════════╝
 
-This structure follows best practices for scalable microservices architecture:
-	•	🔹 Separation of frontend, backend, and database
-	•	🔹 Kubernetes-native deployment strategy
-	•	🔹 Auto-scaling with HPA
-	•	🔹 Secure configuration using ConfigMaps & Secrets
-	•	🔹 Persistent storage for stateful workloads
+☸️ Why Kubernetes?Kubernetes (K8s) is an open-source container orchestration platform that automates the deployment, scaling, and management of containerized applications.
+In simple words — Docker runs your containers, Kubernetes manages them at scale.
 
 ollama-agent/
 ├── frontend/
