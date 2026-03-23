@@ -408,6 +408,21 @@ ollama-agent/
         └── storageclass.yaml
 
 ```
+## 📋 What Each File Does
+
+| 📄 File                         | 📌 Purpose |
+|--------------------------------|----------|
+| `deployment.yaml`              | Runs application pods and manages replicas, container image, and resource limits |
+| `service.yaml`                 | Exposes pods internally (ClusterIP) or externally (NodePort/LoadBalancer) |
+| `hpa.yaml`                     | Automatically scales pods based on CPU or memory usage |
+| `configmap.yaml`               | Stores non-sensitive configuration (e.g., API URLs, environment variables) |
+| `secret.yaml`                  | Stores sensitive data (e.g., JWT secret, MongoDB URI) securely |
+| `statefulset.yaml`             | Deploys MongoDB with stable identity and persistent storage |
+| `persistentvolumeclaim.yaml`   | Requests and reserves storage for MongoDB data |
+| `ingress.yaml`                 | Acts as a single entry point and routes traffic to services |
+| `namespace.yaml`               | Creates an isolated Kubernetes namespace for the application |
+| `storageclass.yaml`            | Defines storage provisioning (e.g., AWS EBS volumes) |
+
 ---
 
 ## 🏗️ Terraform — Coming Soon
