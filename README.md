@@ -375,8 +375,39 @@ cd ../frontend && npm install && npm run build
 ║       EKS/GKE deployment steps will be added here.          ║
 ║                                                              ║
 ╚══════════════════════════════════════════════════════════════╝
-```
 
+This structure follows best practices for scalable microservices architecture:
+	•	🔹 Separation of frontend, backend, and database
+	•	🔹 Kubernetes-native deployment strategy
+	•	🔹 Auto-scaling with HPA
+	•	🔹 Secure configuration using ConfigMaps & Secrets
+	•	🔹 Persistent storage for stateful workloads
+
+ollama-agent/
+├── frontend/
+├── backend/
+└── k8s/
+    ├── frontend/
+    │   ├── deployment.yaml
+    │   ├── service.yaml
+    │   ├── hpa.yaml
+    │   └── configmap.yaml
+    ├── backend/
+    │   ├── deployment.yaml
+    │   ├── service.yaml
+    │   ├── hpa.yaml
+    │   ├── configmap.yaml
+    │   └── secret.yaml
+    ├── mongodb/
+    │   ├── statefulset.yaml
+    │   ├── service.yaml
+    │   └── persistentvolumeclaim.yaml
+    └── cluster/
+        ├── namespace.yaml
+        ├── ingress.yaml
+        └── storageclass.yaml
+
+```
 ---
 
 ## 🏗️ Terraform — Coming Soon
