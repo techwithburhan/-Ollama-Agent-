@@ -450,6 +450,28 @@ Now your entire app runs on a single port: **http://localhost:5005** 🎉
 
 ---
 
+If your resume shows this full stack:
+
+Ollama Agent Project
+─ ✅ Full Stack App (React + Node + MongoDB)
+─ ✅ Docker + Multistage builds
+─ ✅ docker-compose for local dev
+─ ✅ GitHub Actions CI/CD pipeline
+─ ✅ Kubernetes manifests (deploy, svc, hpa, ingress, secret)
+─ ✅ Terraform for AWS infrastructure
+─ ✅ Deployed live on AWS EC2 or EKS
+─ ✅ Monitoring with Prometheus + Grafana
+
+## 🏆 The Project That Gets You Hired
+
+If you found this project helpful:
+
+- 👍 **Give a thumbs up** on YouTube
+- 🔔 **Subscribe** to the channel
+- 🔗 **Follow** on LinkedIn
+- ⭐ **Star** this GitHub repository
+---
+
 ## ⭐ Support the Project
 
 If you found this project helpful:
