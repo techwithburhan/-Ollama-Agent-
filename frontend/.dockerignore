@@ -1,0 +1,53 @@
+# ============================================================
+# .dockerignore - Docker Image Mein Yeh Files Nahi Jayengi
+# Isse build fast hota hai aur image chhoti rehti hai
+# ============================================================
+
+# Node modules - container mein fresh install hoga
+node_modules
+
+# React build output - container mein fresh build hoga
+build
+
+# Git files - production mein zaroorat nahi
+.git
+.gitignore
+.github
+
+# Environment files - KABHI image mein mat daalo
+# Secrets leak ho sakte hain
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+
+# OS generated files
+.DS_Store
+.DS_Store?
+Thumbs.db
+
+# Editor files
+.vscode
+.idea
+*.swp
+*.swo
+
+# Test coverage
+coverage
+.nyc_output
+
+# Documentation - image mein zaroorat nahi
+README.md
+CHANGELOG.md
+docs/
+
+# Docker files khud - recursive copy avoid karo
+Dockerfile
+docker-compose.yml
+.dockerignore
