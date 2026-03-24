@@ -912,11 +912,11 @@ Agent-Pilot/k8s/cluster
 ```
 ### Apply Namespace
 ```bash
-kubectl apply -f namespace.yml```
+kubectl apply -f namespace.yml
 ```
 ### 🔍 Verify
 ```bash
-kubectl get namespaces``
+kubectl get namespaces
 ```
 ### 🎯 Summary
 - Namespace name → ollama-agent
