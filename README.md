@@ -508,6 +508,33 @@ docker rmi -f burhan503/ollama-agent-frontend:latest burhan503/ollama-agent-back
 ### Docker Compose Up 
 <img width="2526" height="1174" alt="image" src="https://github.com/user-attachments/assets/55599493-243f-451d-b833-5d725019ecfb" />
 
+### 📦 List all volumes
+```bash
+docker volume ls
+```
+
+### 📂 Inspect a specific volume
+```bash
+docker volume inspect mongo-data
+```
+
+### 🌐 Check Docker Networks
+```bash
+docker network ls
+```
+
+### 📂 Inspect a specific volume
+```bash
+docker network inspect ollama-network
+```
+### ⚡ Bonus (Useful Commands) 🧹 Remove unused volumes
+```bash
+docker volume prune
+```
+### 🧹 Remove unused networks
+```bash
+docker network prune
+```
 ---
 
 ## ☸️ Kubernetes — Coming Soon
