@@ -434,6 +434,28 @@ Uses a **multi-stage build**:
 cd frontend
 ```
 ### 🔹 Build Image
+```bash
+docker build -t burhan503/ollama-agent-frontend:latest .
+```
+
+### Please login You Docker-Hub on You Local System 
+
+```bash
+Personal access tokens
+```
+```bash
+Generate new token
+```
+```bash
+Copy Paster you User name & Password like
+```
+```bash
+docker login -u burhan503
+```
+### ▶️ Run Container
+```bash
+docker push burhan503/ollama-agent-backend:latest
+```
 
 
 ---
