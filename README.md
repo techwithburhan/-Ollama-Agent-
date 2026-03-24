@@ -505,6 +505,76 @@ docker rmi -f burhan503/ollama-agent-frontend:latest burhan503/ollama-agent-back
 
 ## Docker Compose 
 
+### 👉 Includes:
+- MongoDB (with volume + init)
+- Backend (env configured)
+- Frontend
+- Network + Volume
+- Proper service order
+
+### 🐳 docker-compose.yml
+```yml
+version: "3.8"
+
+services:
+
+  # 🟢 MongoDB
+  mongodb:
+    image: mongo:6.0
+    container_name: ollama-mongodb
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: burhan503
+      MONGO_INITDB_DATABASE: ollama-agent
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    networks:
+      - ollama-network
+
+  # 🔵 Backend
+  backend:
+    image: burhan503/ollama-agent-backend:latest
+    container_name: ollama-backend
+    restart: always
+    depends_on:
+      - mongodb
+    environment:
+      PORT: 5005
+      MONGO_URI: mongodb://admin:burhan503@mongodb:27017/ollama-agent?authSource=admin
+      JWT_SECRET: a3f8c2e1b9d4f7a2c5e8b1d4f7a2c5e8b1d4f7a2c5e8b1d4f7a2c5e8b1d4f7a2c5e8b1d4f7a2c5e8
+      OLLAMA_API: http://host.docker.internal:11434/api
+      OLLAMA_MODEL: llama2
+    ports:
+      - "5005:5005"
+    networks:
+      - ollama-network
+
+  # 🟣 Frontend
+  frontend:
+    image: burhan503/ollama-agent-frontend:latest
+    container_name: ollama-frontend
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - "3000:80"
+    networks:
+      - ollama-network
+
+# 🌐 Network
+networks:
+  ollama-network:
+    driver: bridge
+
+# 💾 Volume (MongoDB data persist)
+volumes:
+  mongo-data:
+```
+
 ### Docker Compose Up 
 <img width="2526" height="1174" alt="image" src="https://github.com/user-attachments/assets/55599493-243f-451d-b833-5d725019ecfb" />
 
