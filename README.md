@@ -465,13 +465,30 @@ docker build -t burhan503/ollama-agent-backend:latest .
 ```
 ### ▶️ Run Container
 ```bash
-docker run -d -p 3000:80 --name frontend burhan503/ollama-agent-frontend
-- 👉 Open: http://localhost:3000
+docker run -d -p 5005:5005 --env-file .env --name backend burhan503/ollama-agent-backend
+- 👉 Backend runs on: http://localhost:5005
 ```
 ### 🔼 Push Image
 ```bash
-docker push burhan503/ollama-agent-frontend:latest
+docker push burhan503/ollama-agent-backend:latest
+
 ```
+###🎯 Summary
+- Frontend → React + Nginx (Port 3000)
+- Backend → Node.js API (Port 5005)
+- Docker images are available on DockerHub under burhan503/*
+
+
+---
+
+This is now:
+- Clean ✅  
+- Fully English ✅  
+- Ready to paste in README.md ✅  
+- Professional level 🚀  
+
+If you want, next I can add **badges + architecture diagram** to make your repo stand out 🔥
+
 ---
 
 ## ☸️ Kubernetes — Coming Soon
