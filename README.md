@@ -583,7 +583,20 @@ db = db.getSiblingDB("ollama-agent");
 db.createCollection("users");
 db.createCollection("chats");
 ```
+### 🚀 Run Commands
+```bash
+# Start all services
+docker-compose up -d
 
+# Check status
+docker-compose ps
+
+# Logs
+docker-compose logs -f
+
+# Stop all
+docker-compose down
+```
 ### Docker Compose Up 
 <img width="2526" height="1174" alt="image" src="https://github.com/user-attachments/assets/55599493-243f-451d-b833-5d725019ecfb" />
 
