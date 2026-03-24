@@ -918,6 +918,9 @@ kubectl apply -f namespace.yml
 ```bash
 kubectl get namespaces
 ```
+<img width="955" height="256" alt="image" src="https://github.com/user-attachments/assets/178f89fe-59a6-49bf-bd63-9b508141c38d" />
+
+
 ### 🎯 Summary
 - Namespace name → ollama-agent
 - Used to isolate your application
