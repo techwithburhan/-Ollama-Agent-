@@ -906,27 +906,245 @@ kubectl get nodes
 ```
 <img width="1239" height="626" alt="image" src="https://github.com/user-attachments/assets/ecb4680f-b5f5-47cd-81d6-c08b9bd915f9" />
 
-### 1 🚀 Create namesapce directory ->
-```dir
-Agent-Pilot/k8s/cluster
-```
-### Apply Namespace
-```bash
-kubectl apply -f namespace.yml
-```
-### 🔍 Verify
-```bash
-kubectl get namespaces
-```
-<img width="955" height="256" alt="image" src="https://github.com/user-attachments/assets/178f89fe-59a6-49bf-bd63-9b508141c38d" />
+# 🚀 Ollama Agent — Kubernetes Deployment Guide
 
+This document covers **installation, deployment, access, and troubleshooting** for the Ollama Agent project on Kubernetes.
 
-### 🎯 Summary
-- Namespace name → ollama-agent
-- Used to isolate your application
-- Helps in better management & organization
+---
 
-## 🆚 Setup On AWS EKS managed By AWS  
+# 📦 1. Prerequisites
+
+Ensure the following are installed:
+
+* Kubernetes cluster (Docker Desktop / Minikube / EKS)
+* kubectl CLI
+* Docker (for building images)
+* Git
+
+---
+
+# ⚙️ 2. Cluster Setup
+
+### Enable Kubernetes (Docker Desktop)
+
+* Go to Docker Desktop → Settings → Kubernetes → Enable
+
+### Verify cluster:
+
+```
+kubectl get nodes
+```
+
+Expected:
+
+* Node should be in `Ready` state
+
+---
+
+# 🌐 3. Install Ingress Controller
+
+Ingress requires a controller to route traffic.
+
+### Install NGINX Ingress:
+
+```
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/cloud/deploy.yaml
+```
+
+### Verify:
+
+```
+kubectl get pods -n ingress-nginx
+```
+
+Wait until:
+
+```
+1/1 Running
+```
+
+---
+
+# 🚀 4. Deploy Application
+
+Run the deployment script:
+
+```
+chmod +x apply-all.sh
+./apply-all.sh
+```
+
+This will:
+
+* Create namespace
+* Deploy MongoDB
+* Deploy backend
+* Deploy frontend
+* Apply ingress
+
+---
+
+# 🌐 5. Access Application
+
+### Port forward ingress:
+
+```
+kubectl port-forward -n ingress-nginx service/ingress-nginx-controller 8080:80
+```
+
+### Open in browser:
+
+* Frontend → http://localhost:8080
+* Backend → http://localhost:8080/api
+
+---
+
+# 🧪 6. Verify Deployment
+
+Check all resources:
+
+```
+kubectl get pods -n ollama-agent
+kubectl get svc -n ollama-agent
+kubectl get ingress -n ollama-agent
+```
+
+---
+
+# 🛠️ 7. Troubleshooting Guide
+
+## 🔴 Pod stuck in Pending
+
+### Cause:
+
+* PVC not bound (storage issue)
+
+### Check:
+
+```
+kubectl get pvc -n ollama-agent
+```
+
+### Fix:
+
+* Use correct StorageClass for environment
+
+  * Local → standard
+  * AWS → EBS
+
+---
+
+## 🔴 Ingress not working
+
+### Cause:
+
+* Ingress controller missing OR class not set
+
+### Fix:
+
+* Ensure ingress controller is installed
+* Ensure ingress has correct class
+
+---
+
+## 🔴 Port-forward not working
+
+### Cause:
+
+* Pod not ready
+
+### Fix:
+
+```
+kubectl get pods -n ingress-nginx
+```
+
+Wait until pod shows:
+
+```
+1/1 Running
+```
+
+---
+
+## 🔴 Backend not connecting to MongoDB
+
+### Cause:
+
+* MongoDB not ready
+
+### Fix:
+
+* Ensure MongoDB pod is running
+* Check logs:
+
+```
+kubectl logs <pod-name> -n ollama-agent
+```
+
+---
+
+## 🔴 Service not accessible
+
+### Check:
+
+```
+kubectl get svc -n ollama-agent
+```
+
+Ensure:
+
+* Services are created
+* Ports are correct
+
+---
+
+# 🗑️ 8. Delete Deployment
+
+### Safe delete (keep data):
+
+```
+./delete-all.sh
+```
+
+### Full delete (remove data):
+
+```
+./delete-all.sh --full
+```
+
+---
+
+# 🧠 Notes
+
+* Use different storage for different environments:
+
+  * Local → standard
+  * Cloud → EBS
+* Always deploy ingress after services
+* Use readiness and liveness probes for stability
+
+---
+
+# ✅ Status Check Commands
+
+```
+kubectl get pods -A
+kubectl get svc -A
+kubectl get ingress -A
+kubectl get pvc -A
+```
+
+---
+
+# 🎯 Summary
+
+* Deploy using `apply-all.sh`
+* Access via ingress (localhost:8080)
+* Debug using `kubectl describe` and `logs`
+* Delete safely using `delete-all.sh`
+
+---
 
 ## 🆚 Docker vs Kubernetes
 
