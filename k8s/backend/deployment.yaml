@@ -1,39 +1,151 @@
-apiVersion: apps/v1     # Kubernetes version for Deployments
-kind: Deployment        # We are creating a Deployment
+# apiVersion: apps/v1     # Kubernetes version for Deployments
+# kind: Deployment        # We are creating a Deployment
+
+# metadata:
+#   name: ollama-backend            # Name of this deployment
+#   namespace: ollama-agent         # Our namespace
+#   labels:
+#     app: ollama-backend
+
+# spec:
+#   replicas: 2                     # Run 2 copies of the backend
+#                                   # If 1 crashes, the other keeps serving requests
+
+#   strategy:
+#     type: RollingUpdate           # Update one pod at a time (no downtime)
+#     rollingUpdate:
+#       maxUnavailable: 1           # Max 1 pod offline during update
+#       maxSurge: 1                 # Can create 1 extra pod during update
+
+#   selector:
+#     matchLabels:
+#       app: ollama-backend         # This deployment manages pods with this label
+
+#   template:                       # Blueprint for each pod
+#     metadata:
+#       labels:
+#         app: ollama-backend       # Label given to every pod
+
+#     spec:
+#       terminationGracePeriodSeconds: 60
+#                                   # Give the pod 60 seconds to finish active requests
+#                                   # before Kubernetes force-stops it
+#                                   # Important for SSE streaming — don't cut off live chats
+
+#       # Wait for MongoDB to be ready before starting the backend
+#       # Without this, backend crashes on startup because DB isn't available yet
+#       initContainers:
+#         - name: wait-for-mongodb
+#           image: busybox:1.35
+#           command:
+#             - sh
+#             - -c
+#             - |
+#               until nc -z ollama-mongodb-headless 27017; do
+#                 echo "Waiting for MongoDB...";
+#                 sleep 5;
+#               done
+
+#       containers:
+#         - name: ollama-backend
+#           image: burhan503/ollama-agent-backend:latest   # Your DockerHub image
+#           imagePullPolicy: Always
+
+#           ports:
+#             - containerPort: 5005   # Express.js runs on port 5005
+
+#           # Load all settings from the ConfigMap as environment variables
+#           # Every key in the ConfigMap becomes an env var in the container
+#           envFrom:
+#             - configMapRef:
+#                 name: ollama-backend-config   # Our ConfigMap name
+
+#           # Load sensitive values from the Secret individually
+#           # We override MONGO_URI and JWT_SECRET from the Secret
+#           # (Secret is more secure than ConfigMap for passwords)
+#           env:
+#             - name: MONGO_URI
+#               valueFrom:
+#                 secretKeyRef:
+#                   name: ollama-backend-secret   # Our Secret name
+#                   key: MONGO_URI                # The key inside the Secret
+
+#             - name: JWT_SECRET
+#               valueFrom:
+#                 secretKeyRef:
+#                   name: ollama-backend-secret
+#                   key: JWT_SECRET
+
+#           # Health check — "Is the backend alive?"
+#           # If this fails 3 times in a row → Kubernetes restarts the pod
+#           livenessProbe:
+#             httpGet:
+#               path: /api/health     # Add this route in your Express app:
+#                                     # app.get('/api/health', (req, res) => res.send('ok'))
+#               port: 5005
+#             initialDelaySeconds: 30  # Wait 30s before first check (Node.js startup time)
+#             periodSeconds: 30
+#             failureThreshold: 3
+
+#           # Readiness check — "Is this pod ready to receive traffic?"
+#           # Pod won't get traffic until this passes
+#           readinessProbe:
+#             httpGet:
+#               path: /api/health
+#               port: 5005
+#             initialDelaySeconds: 20
+#             periodSeconds: 15
+#             failureThreshold: 3
+
+#           # Resource limits
+#           resources:
+#             requests:
+#               cpu: "200m"           # Minimum: 0.2 CPU core
+#               memory: "256Mi"       # Minimum: 256 MB RAM
+#             limits:
+#               cpu: "500m"           # Maximum: 0.5 CPU core
+#               memory: "512Mi"       # Maximum: 512 MB RAM
+
+#           # Temporary folder for Node.js to write files
+#           volumeMounts:
+#             - name: tmp
+#               mountPath: /tmp
+
+#       volumes:
+#         - name: tmp
+#           emptyDir: {}              # emptyDir = empty folder, wiped when pod restarts
+
+apiVersion: apps/v1
+kind: Deployment
 
 metadata:
-  name: ollama-backend            # Name of this deployment
-  namespace: ollama-agent         # Our namespace
+  name: ollama-backend
+  namespace: ollama-agent
   labels:
     app: ollama-backend
 
 spec:
-  replicas: 2                     # Run 2 copies of the backend
-                                  # If 1 crashes, the other keeps serving requests
+  replicas: 1
 
   strategy:
-    type: RollingUpdate           # Update one pod at a time (no downtime)
+    type: RollingUpdate
     rollingUpdate:
-      maxUnavailable: 1           # Max 1 pod offline during update
-      maxSurge: 1                 # Can create 1 extra pod during update
+      maxUnavailable: 1
+      maxSurge: 1
 
   selector:
     matchLabels:
-      app: ollama-backend         # This deployment manages pods with this label
+      app: ollama-backend
 
-  template:                       # Blueprint for each pod
+  template:
     metadata:
       labels:
-        app: ollama-backend       # Label given to every pod
+        app: ollama-backend
 
     spec:
-      terminationGracePeriodSeconds: 60
-                                  # Give the pod 60 seconds to finish active requests
-                                  # before Kubernetes force-stops it
-                                  # Important for SSE streaming — don't cut off live chats
+      terminationGracePeriodSeconds: 30
 
-      # Wait for MongoDB to be ready before starting the backend
-      # Without this, backend crashes on startup because DB isn't available yet
+      # Wait for MongoDB before starting backend
       initContainers:
         - name: wait-for-mongodb
           image: busybox:1.35
@@ -45,30 +157,26 @@ spec:
                 echo "Waiting for MongoDB...";
                 sleep 5;
               done
+              echo "MongoDB is ready!"
 
       containers:
         - name: ollama-backend
-          image: burhan503/ollama-agent-backend:latest   # Your DockerHub image
+          image: burhan503/ollama-agent-backend:latest
           imagePullPolicy: Always
 
           ports:
-            - containerPort: 5005   # Express.js runs on port 5005
+            - containerPort: 5005
 
-          # Load all settings from the ConfigMap as environment variables
-          # Every key in the ConfigMap becomes an env var in the container
           envFrom:
             - configMapRef:
-                name: ollama-backend-config   # Our ConfigMap name
+                name: ollama-backend-config
 
-          # Load sensitive values from the Secret individually
-          # We override MONGO_URI and JWT_SECRET from the Secret
-          # (Secret is more secure than ConfigMap for passwords)
           env:
             - name: MONGO_URI
               valueFrom:
                 secretKeyRef:
-                  name: ollama-backend-secret   # Our Secret name
-                  key: MONGO_URI                # The key inside the Secret
+                  name: ollama-backend-secret
+                  key: MONGO_URI
 
             - name: JWT_SECRET
               valueFrom:
@@ -76,41 +184,40 @@ spec:
                   name: ollama-backend-secret
                   key: JWT_SECRET
 
-          # Health check — "Is the backend alive?"
-          # If this fails 3 times in a row → Kubernetes restarts the pod
+          # ── Liveness Probe ──────────────────────────────────────────────────
+          # TCP check — just verifies port 5005 is open and accepting connections
+          # Does NOT require any specific route in your Express app
           livenessProbe:
-            httpGet:
-              path: /api/health     # Add this route in your Express app:
-                                    # app.get('/api/health', (req, res) => res.send('ok'))
-              port: 5005
-            initialDelaySeconds: 30  # Wait 30s before first check (Node.js startup time)
+            tcpSocket:
+              port: 5005             # Just checks if port is open
+            initialDelaySeconds: 30  # Wait 30s for Node.js to start
             periodSeconds: 30
             failureThreshold: 3
+            timeoutSeconds: 5
 
-          # Readiness check — "Is this pod ready to receive traffic?"
-          # Pod won't get traffic until this passes
+          # ── Readiness Probe ─────────────────────────────────────────────────
+          # Also TCP — marks pod as ready as soon as Express is listening
+          # No need for /api/health route in your code
           readinessProbe:
-            httpGet:
-              path: /api/health
-              port: 5005
+            tcpSocket:
+              port: 5005             # Pod is "ready" when port 5005 is open
             initialDelaySeconds: 20
-            periodSeconds: 15
+            periodSeconds: 10
             failureThreshold: 3
+            timeoutSeconds: 5
 
-          # Resource limits
           resources:
             requests:
-              cpu: "200m"           # Minimum: 0.2 CPU core
-              memory: "256Mi"       # Minimum: 256 MB RAM
+              cpu: "100m"
+              memory: "128Mi"
             limits:
-              cpu: "500m"           # Maximum: 0.5 CPU core
-              memory: "512Mi"       # Maximum: 512 MB RAM
+              cpu: "300m"
+              memory: "256Mi"
 
-          # Temporary folder for Node.js to write files
           volumeMounts:
             - name: tmp
               mountPath: /tmp
 
       volumes:
         - name: tmp
-          emptyDir: {}              # emptyDir = empty folder, wiped when pod restarts
+          emptyDir: {}

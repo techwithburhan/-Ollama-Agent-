@@ -1,26 +1,54 @@
-apiVersion: v1                      # Kubernetes version
-kind: PersistentVolumeClaim         # We are creating a PVC
-                                    # PVC = a request for storage (disk space)
-                                    # Think of it as asking Kubernetes:
-                                    # "Please give me 10GB of storage"
-                                    # Kubernetes creates an AWS EBS disk and attaches it
+# apiVersion: v1                      # Kubernetes version
+# kind: PersistentVolumeClaim         # We are creating a PVC
+#                                     # PVC = a request for storage (disk space)
+#                                     # Think of it as asking Kubernetes:
+#                                     # "Please give me 10GB of storage"
+#                                     # Kubernetes creates an AWS EBS disk and attaches it
+
+# metadata:
+#   name: mongodb-pvc                 # Name of this storage request
+#   namespace: ollama-agent           # Our namespace
+#   labels:
+#     app: ollama-mongodb
+
+# spec:
+#   accessModes:
+#     - ReadWriteOnce                 # Only 1 pod can read/write this disk at a time
+#                                     # This is correct for MongoDB (single instance)
+
+#   storageClassName: aws-ebs         # Use the StorageClass we created in cluster/storageclass.yaml
+#                                     # This tells Kubernetes to create an AWS EBS disk
+
+#   resources:
+#     requests:
+#       storage: 10Gi                 # Request 10 GB of disk space for MongoDB data
+#                                     # Stores all user accounts and chat history
+#                                     # You can increase this later without downtime
+apiVersion: v1
+kind: PersistentVolumeClaim     # PVC = request for disk storage
+                                # Kubernetes sees this and creates storage using the StorageClass
 
 metadata:
-  name: mongodb-pvc                 # Name of this storage request
-  namespace: ollama-agent           # Our namespace
+  name: mongodb-pvc             # Name of this storage request
+  namespace: ollama-agent
   labels:
     app: ollama-mongodb
 
 spec:
   accessModes:
-    - ReadWriteOnce                 # Only 1 pod can read/write this disk at a time
-                                    # This is correct for MongoDB (single instance)
+    - ReadWriteOnce             # Only 1 pod can use this storage at a time
+                                # Correct for MongoDB (single instance)
 
-  storageClassName: aws-ebs         # Use the StorageClass we created in cluster/storageclass.yaml
-                                    # This tells Kubernetes to create an AWS EBS disk
+  # ── LOCAL (KIND) ────────────────────────────────────────────────────────────
+  # Use the local StorageClass we defined in cluster/storageclass.yaml
+  # Data is stored in a folder on your machine (inside Docker)
+  storageClassName: standard-local
+
+  # ── AWS EKS (commented out) ─────────────────────────────────────────────────
+  # storageClassName: aws-ebs
+  # ─────────────────────────────────────────────────────────────────────────────
 
   resources:
     requests:
-      storage: 10Gi                 # Request 10 GB of disk space for MongoDB data
-                                    # Stores all user accounts and chat history
-                                    # You can increase this later without downtime
+      storage: 1Gi              # 1 GB is enough for local development
+                                # AWS Production: increase to 10Gi or more

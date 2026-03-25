@@ -1,63 +1,186 @@
-apiVersion: apps/v1     # Kubernetes version
-kind: StatefulSet       # We are creating a StatefulSet
-                        # StatefulSet is like a Deployment BUT for databases
-                        #
-                        # Deployment → pods are identical and replaceable
-                        # StatefulSet → each pod has a stable name and its own storage
-                        #
-                        # We use StatefulSet for MongoDB because:
-                        #   - Pod name is always: ollama-mongodb-0 (stable, predictable)
-                        #   - Each pod gets its own storage that follows it around
-                        #   - If pod restarts, it reconnects to the same disk (data safe)
+# apiVersion: apps/v1     # Kubernetes version
+# kind: StatefulSet       # We are creating a StatefulSet
+#                         # StatefulSet is like a Deployment BUT for databases
+#                         #
+#                         # Deployment → pods are identical and replaceable
+#                         # StatefulSet → each pod has a stable name and its own storage
+#                         #
+#                         # We use StatefulSet for MongoDB because:
+#                         #   - Pod name is always: ollama-mongodb-0 (stable, predictable)
+#                         #   - Each pod gets its own storage that follows it around
+#                         #   - If pod restarts, it reconnects to the same disk (data safe)
+
+# metadata:
+#   name: ollama-mongodb            # Pod names will be: ollama-mongodb-0
+#   namespace: ollama-agent
+#   labels:
+#     app: ollama-mongodb
+
+# spec:
+#   serviceName: ollama-mongodb-headless  # Must match the headless service name
+#                                         # This is how Kubernetes gives each pod a stable DNS name
+
+#   replicas: 1                     # 1 MongoDB pod (single instance setup)
+#                                   # For a replica set → set to 3 (requires extra config)
+
+#   selector:
+#     matchLabels:
+#       app: ollama-mongodb
+
+#   template:                       # Blueprint for each pod
+#     metadata:
+#       labels:
+#         app: ollama-mongodb
+
+#     spec:
+#       terminationGracePeriodSeconds: 60
+#                                   # Give MongoDB 60 seconds to finish writing before shutdown
+#                                   # Important for data safety
+
+#       containers:
+#         - name: mongodb
+#           image: mongo:6.0        # Official MongoDB image
+#                                   # Use a fixed version (not :latest) for stability
+
+#           imagePullPolicy: IfNotPresent   # Only download if not already on this node
+
+#           ports:
+#             - containerPort: 27017   # Standard MongoDB port
+
+#           # Start MongoDB with authentication enabled
+#           args:
+#             - "--auth"              # Require username + password to connect
+#             - "--bind_ip_all"       # Accept connections from all IPs inside the cluster
+
+#           # Load MongoDB credentials from our Secret
+#           env:
+#             - name: MONGO_INITDB_ROOT_USERNAME
+#               valueFrom:
+#                 secretKeyRef:
+#                   name: ollama-backend-secret   # The Secret we created in backend/secret.yaml
+#                   key: MONGO_USERNAME
+
+#             - name: MONGO_INITDB_ROOT_PASSWORD
+#               valueFrom:
+#                 secretKeyRef:
+#                   name: ollama-backend-secret
+#                   key: MONGO_PASSWORD
+
+#             - name: MONGO_INITDB_DATABASE
+#               value: "ollama-agent"   # Create this database on first startup
+
+#           volumeMounts:
+#             # Mount the persistent disk at MongoDB's data directory
+#             - name: mongodb-data
+#               mountPath: /data/db   # MongoDB stores all data here
+
+#             # Mount the init script from our ConfigMap
+#             - name: mongodb-init
+#               mountPath: /docker-entrypoint-initdb.d/
+#                                     # MongoDB runs all .js files in this folder
+#                                     # on first startup (when /data/db is empty)
+
+#           # Health check — "Is MongoDB responding?"
+#           livenessProbe:
+#             exec:
+#               command:
+#                 - mongosh
+#                 - --eval
+#                 - "db.adminCommand('ping')"  # Send a ping to MongoDB
+#             initialDelaySeconds: 30   # Wait 30s before first check (MongoDB takes time to start)
+#             periodSeconds: 30
+#             failureThreshold: 5       # Restart after 5 failures (database needs more tolerance)
+
+#           readinessProbe:
+#             exec:
+#               command:
+#                 - mongosh
+#                 - --eval
+#                 - "db.adminCommand('ping')"
+#             initialDelaySeconds: 20
+#             periodSeconds: 15
+#             failureThreshold: 3
+
+#           # Resource limits
+#           resources:
+#             requests:
+#               cpu: "200m"           # Minimum: 0.2 CPU
+#               memory: "512Mi"       # Minimum: 512 MB (MongoDB needs more memory than app containers)
+#             limits:
+#               cpu: "1000m"          # Maximum: 1 full CPU core
+#               memory: "1Gi"         # Maximum: 1 GB RAM
+
+#       # Connect the init script ConfigMap as a volume
+#       volumes:
+#         - name: mongodb-init
+#           configMap:
+#             name: ollama-mongodb-init   # Our ConfigMap with mongo-init.js
+
+#   # ── This is the key part of StatefulSet ──────────────────────────────────
+#   # volumeClaimTemplates = automatically create a unique PVC for each pod
+#   # Pod ollama-mongodb-0 → gets its own PVC: mongodb-data-ollama-mongodb-0
+#   # This PVC persists even if the pod is deleted and recreated
+#   volumeClaimTemplates:
+#     - metadata:
+#         name: mongodb-data          # PVC name prefix
+#         labels:
+#           app: ollama-mongodb
+
+#       spec:
+#         accessModes:
+#           - ReadWriteOnce           # Only 1 pod can use this disk at a time
+
+#         storageClassName: aws-ebs   # Use our AWS EBS StorageClass
+
+#         resources:
+#           requests:
+#             storage: 10Gi           # 10 GB for MongoDB data
+
+apiVersion: apps/v1
+kind: StatefulSet               # StatefulSet = like Deployment but for databases
+                                # Each pod gets a stable name and its own storage
+                                # Pod name will always be: ollama-mongodb-0
 
 metadata:
-  name: ollama-mongodb            # Pod names will be: ollama-mongodb-0
+  name: ollama-mongodb
   namespace: ollama-agent
   labels:
     app: ollama-mongodb
 
 spec:
   serviceName: ollama-mongodb-headless  # Must match the headless service name
-                                        # This is how Kubernetes gives each pod a stable DNS name
-
-  replicas: 1                     # 1 MongoDB pod (single instance setup)
-                                  # For a replica set → set to 3 (requires extra config)
+  replicas: 1                           # 1 MongoDB pod (single instance)
 
   selector:
     matchLabels:
       app: ollama-mongodb
 
-  template:                       # Blueprint for each pod
+  template:
     metadata:
       labels:
         app: ollama-mongodb
 
     spec:
-      terminationGracePeriodSeconds: 60
-                                  # Give MongoDB 60 seconds to finish writing before shutdown
-                                  # Important for data safety
+      terminationGracePeriodSeconds: 30
+                                # Give MongoDB 30s to finish writing before shutdown
 
       containers:
         - name: mongodb
-          image: mongo:6.0        # Official MongoDB image
-                                  # Use a fixed version (not :latest) for stability
-
-          imagePullPolicy: IfNotPresent   # Only download if not already on this node
+          image: mongo:6.0      # Official MongoDB 6.0 image (fixed version, not latest)
+          imagePullPolicy: IfNotPresent   # Don't re-download if already on node
 
           ports:
-            - containerPort: 27017   # Standard MongoDB port
+            - containerPort: 27017  # Standard MongoDB port
 
-          # Start MongoDB with authentication enabled
           args:
-            - "--auth"              # Require username + password to connect
-            - "--bind_ip_all"       # Accept connections from all IPs inside the cluster
+            - "--auth"          # Require username + password to connect
+            - "--bind_ip_all"   # Accept connections from all IPs inside cluster
 
-          # Load MongoDB credentials from our Secret
           env:
             - name: MONGO_INITDB_ROOT_USERNAME
               valueFrom:
                 secretKeyRef:
-                  name: ollama-backend-secret   # The Secret we created in backend/secret.yaml
+                  name: ollama-backend-secret
                   key: MONGO_USERNAME
 
             - name: MONGO_INITDB_ROOT_PASSWORD
@@ -67,29 +190,28 @@ spec:
                   key: MONGO_PASSWORD
 
             - name: MONGO_INITDB_DATABASE
-              value: "ollama-agent"   # Create this database on first startup
+              value: "ollama-agent"   # Auto-create this database on first startup
 
           volumeMounts:
-            # Mount the persistent disk at MongoDB's data directory
+            # Where MongoDB stores all its data
             - name: mongodb-data
-              mountPath: /data/db   # MongoDB stores all data here
+              mountPath: /data/db
 
-            # Mount the init script from our ConfigMap
+            # Init script that creates our collections and indexes
             - name: mongodb-init
               mountPath: /docker-entrypoint-initdb.d/
-                                    # MongoDB runs all .js files in this folder
-                                    # on first startup (when /data/db is empty)
 
-          # Health check — "Is MongoDB responding?"
+          # Health check — ping MongoDB to see if it's alive
           livenessProbe:
             exec:
               command:
                 - mongosh
                 - --eval
-                - "db.adminCommand('ping')"  # Send a ping to MongoDB
-            initialDelaySeconds: 30   # Wait 30s before first check (MongoDB takes time to start)
+                - "db.adminCommand('ping')"
+            initialDelaySeconds: 30   # Wait 30s before first check
             periodSeconds: 30
-            failureThreshold: 5       # Restart after 5 failures (database needs more tolerance)
+            failureThreshold: 5
+            timeoutSeconds: 10        # Give it 10s to respond (important for local!)
 
           readinessProbe:
             exec:
@@ -100,15 +222,27 @@ spec:
             initialDelaySeconds: 20
             periodSeconds: 15
             failureThreshold: 3
+            timeoutSeconds: 10
 
-          # Resource limits
+          # ── LOCAL resource limits ──────────────────────────────────────────
+          # Reduced for local machine — your laptop has limited resources
           resources:
             requests:
-              cpu: "200m"           # Minimum: 0.2 CPU
-              memory: "512Mi"       # Minimum: 512 MB (MongoDB needs more memory than app containers)
+              cpu: "100m"       # 0.1 CPU core (very light for local)
+              memory: "256Mi"   # 256 MB RAM
             limits:
-              cpu: "1000m"          # Maximum: 1 full CPU core
-              memory: "1Gi"         # Maximum: 1 GB RAM
+              cpu: "500m"       # 0.5 CPU core max
+              memory: "512Mi"   # 512 MB RAM max
+
+          # ── AWS EKS resource limits (commented out) ────────────────────────
+          # resources:
+          #   requests:
+          #     cpu: "200m"
+          #     memory: "512Mi"
+          #   limits:
+          #     cpu: "1000m"
+          #     memory: "1Gi"
+          # ───────────────────────────────────────────────────────────────────
 
       # Connect the init script ConfigMap as a volume
       volumes:
@@ -116,22 +250,25 @@ spec:
           configMap:
             name: ollama-mongodb-init   # Our ConfigMap with mongo-init.js
 
-  # ── This is the key part of StatefulSet ──────────────────────────────────
-  # volumeClaimTemplates = automatically create a unique PVC for each pod
-  # Pod ollama-mongodb-0 → gets its own PVC: mongodb-data-ollama-mongodb-0
-  # This PVC persists even if the pod is deleted and recreated
+  # ── volumeClaimTemplates ──────────────────────────────────────────────────
+  # StatefulSet auto-creates a PVC for each pod using this template
+  # Pod ollama-mongodb-0 → gets PVC: mongodb-data-ollama-mongodb-0
   volumeClaimTemplates:
     - metadata:
-        name: mongodb-data          # PVC name prefix
+        name: mongodb-data
         labels:
           app: ollama-mongodb
 
       spec:
         accessModes:
-          - ReadWriteOnce           # Only 1 pod can use this disk at a time
+          - ReadWriteOnce
 
-        storageClassName: aws-ebs   # Use our AWS EBS StorageClass
+        # ── LOCAL (KIND) ─────────────────────────────────────────────────────
+        storageClassName: standard-local
+        # ── AWS EKS (commented out) ──────────────────────────────────────────
+        # storageClassName: aws-ebs
+        # ─────────────────────────────────────────────────────────────────────
 
         resources:
           requests:
-            storage: 10Gi           # 10 GB for MongoDB data
+            storage: 1Gi        # 1 GB locally (increase to 10Gi on AWS)
