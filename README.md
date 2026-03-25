@@ -1456,6 +1456,280 @@ cluster/storageclass.yaml → AWS storage provisioning
 ║                                                              ║
 ╚══════════════════════════════════════════════════════════════╝
 ```
+# 🎯 DevOps + AI Interview Questions (Project-Based)
+
+This section contains **real-world interview questions** based on this project covering:
+
+* Docker
+* Kubernetes
+* Terraform
+* AWS
+* Git
+* CI/CD
+* AI / LLM / Ollama
+
+---
+
+# 🐳 Docker — 20 Questions
+
+### 🔹 Basic
+
+1. What is Docker and why is it used?
+2. What is the difference between Docker Image and Container?
+3. What is a Dockerfile?
+4. What is Docker Hub?
+5. Difference between `docker run` and `docker start`?
+
+### 🔹 Intermediate
+
+6. What is multi-stage build in Docker?
+7. Difference between CMD and ENTRYPOINT?
+8. What is Docker volume?
+9. What is Docker network?
+10. Difference between bridge and host network?
+
+### 🔹 Advanced
+
+11. How do you reduce Docker image size?
+12. What is layer caching?
+13. How do you handle environment variables in Docker?
+14. What is docker-compose?
+
+### 🔹 Scenario-Based
+
+15. Your container crashes immediately after start — how will you debug?
+16. Docker container is running but app not accessible — what will you check?
+17. Image works locally but fails on server — why?
+18. How will you run multiple services (frontend + backend + DB)?
+19. How do you persist MongoDB data in Docker?
+20. How do you deploy Docker containers to production?
+
+---
+
+# ☸️ Kubernetes — 20 Questions
+
+### 🔹 Basic
+
+1. What is Kubernetes?
+2. What is a Pod?
+3. What is a Deployment?
+4. What is a Service?
+5. Types of Services in Kubernetes?
+
+### 🔹 Intermediate
+
+6. What is ConfigMap?
+7. What is Secret?
+8. What is Ingress?
+9. What is HPA?
+10. Difference between Deployment and StatefulSet?
+
+### 🔹 Advanced
+
+11. What is rolling update?
+12. What is readiness vs liveness probe?
+13. What is PersistentVolume and PVC?
+14. What is StorageClass?
+
+### 🔹 Scenario-Based
+
+15. Pod is in Pending state — how do you debug?
+16. Backend cannot connect to MongoDB — what will you check?
+17. Ingress is not working — possible reasons?
+18. Pod is restarting again and again — how to debug?
+19. How do you scale your application automatically?
+20. How do you ensure zero downtime deployment?
+
+---
+
+# 🏗️ Terraform — 20 Questions
+
+### 🔹 Basic
+
+1. What is Terraform?
+2. What is Infrastructure as Code?
+3. What is provider in Terraform?
+4. What is state file?
+5. Difference between `terraform plan` and `apply`?
+
+### 🔹 Intermediate
+
+6. What is variable in Terraform?
+7. What is output?
+8. What is module?
+9. What is remote backend?
+10. What is lifecycle?
+
+### 🔹 Advanced
+
+11. What is state locking?
+12. How do you manage secrets in Terraform?
+13. What is dependency handling?
+14. How do you reuse code?
+
+### 🔹 Scenario-Based
+
+15. Terraform state file is corrupted — what will you do?
+16. You want to create EC2 + VPC — how will you structure?
+17. How do you manage multiple environments (dev/prod)?
+18. How do you destroy specific resource only?
+19. How do you integrate Terraform with CI/CD?
+20. How do you prevent accidental resource deletion?
+
+---
+
+# ☁️ AWS — 20 Questions
+
+### 🔹 Basic
+
+1. What is AWS?
+2. What is EC2?
+3. What is S3?
+4. What is VPC?
+5. What is IAM?
+
+### 🔹 Intermediate
+
+6. What is Load Balancer?
+7. What is Auto Scaling?
+8. Difference between Security Group and NACL?
+9. What is EBS?
+10. What is Route53?
+
+### 🔹 Advanced
+
+11. What is EKS?
+12. What is CloudWatch?
+13. What is CloudFront?
+14. What is IAM Role vs User?
+
+### 🔹 Scenario-Based
+
+15. Your EC2 app is not accessible — what will you check?
+16. How do you deploy Kubernetes on AWS?
+17. How do you secure your infrastructure?
+18. Your app is slow — how will you scale?
+19. How do you design highly available architecture?
+20. How do you reduce AWS cost?
+
+---
+
+# 🔧 Git — 20 Questions
+
+### 🔹 Basic
+
+1. What is Git?
+2. What is repository?
+3. Difference between git pull and fetch?
+4. What is commit?
+5. What is branch?
+
+### 🔹 Intermediate
+
+6. What is merge vs rebase?
+7. What is conflict in Git?
+8. What is .gitignore?
+9. What is staging area?
+10. What is tag?
+
+### 🔹 Advanced
+
+11. What is cherry-pick?
+12. What is stash?
+13. What is detached HEAD?
+14. What is Git workflow?
+
+### 🔹 Scenario-Based
+
+15. You have merge conflict — how to resolve?
+16. Accidentally pushed wrong code — what to do?
+17. Need to undo last commit — how?
+18. How to collaborate with team?
+19. Difference between force push and normal push?
+20. How do you manage versioning?
+
+---
+
+# 🔁 CI/CD — 20 Questions
+
+### 🔹 Basic
+
+1. What is CI/CD?
+2. Difference between CI and CD?
+3. What is pipeline?
+4. What is build stage?
+5. What is deploy stage?
+
+### 🔹 Intermediate
+
+6. What is GitHub Actions?
+7. What is Jenkins?
+8. What is artifact?
+9. What is rollback?
+10. What is environment (dev/staging/prod)?
+
+### 🔹 Advanced
+
+11. What is blue-green deployment?
+12. What is canary deployment?
+13. What is pipeline as code?
+14. How do you secure secrets in CI/CD?
+
+### 🔹 Scenario-Based
+
+15. Pipeline fails — how do you debug?
+16. Deployment breaks production — what to do?
+17. How do you automate Docker build and push?
+18. How do you deploy to Kubernetes via CI/CD?
+19. How do you run tests before deployment?
+20. How do you ensure zero downtime deployment?
+
+---
+
+# 🤖 AI / LLM / Ollama — 20 Questions
+
+### 🔹 Basic
+
+1. What is LLM?
+2. What is Ollama?
+3. What is prompt?
+4. What is token?
+5. What is inference?
+
+### 🔹 Intermediate
+
+6. What is streaming response?
+7. What is context window?
+8. What is model fine-tuning?
+9. Difference between local LLM vs API (OpenAI)?
+10. What is embedding?
+
+### 🔹 Advanced
+
+11. What is RAG (Retrieval-Augmented Generation)?
+12. What is vector database?
+13. What is latency in LLM?
+14. What is hallucination?
+
+### 🔹 Scenario-Based
+
+15. LLM response is slow — how to optimize?
+16. Model giving wrong answers — what to do?
+17. How do you handle large documents?
+18. How do you build AI agent?
+19. How do you secure local LLM?
+20. Why choose Ollama over cloud APIs?
+
+---
+
+# 🎯 Final Tip
+
+👉 Practice these questions with your project examples
+👉 Always explain using your real implementation
+
+**Example:**
+
+> “In my project, I used Kubernetes HPA to auto-scale backend pods based on CPU usage…”
 
 ---
 
