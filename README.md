@@ -1345,6 +1345,7 @@ kubectl get pods -n ingress-nginx
 
 ```bash
 kubectl port-forward -n ingress-nginx service/ingress-nginx-controller 8080:80
+kubectl port-forward -n ollama-agent service/ollama-backend-service 5005:5005
 ```
 
 ---
