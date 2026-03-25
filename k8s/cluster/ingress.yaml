@@ -1,0 +1,59 @@
+apiVersion: networking.k8s.io/v1    # Kubernetes version for networking
+kind: Ingress                       # We are creating an Ingress
+                                    # Ingress = the "front door" of our app
+                                    # It receives traffic from the internet
+                                    # and sends it to the right service
+
+metadata:
+  name: ollama-agent-ingress        # Name of this ingress
+  namespace: ollama-agent           # Our namespace (must match everywhere)
+
+  annotations:
+    # Which tool handles this Ingress (Nginx is most common)
+    kubernetes.io/ingress.class: "nginx"
+
+    # Auto-create a free SSL certificate (HTTPS)
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+
+    # Increase timeout to 1 hour — needed because our AI chat uses
+    # streaming (SSE) which keeps the connection open for a long time
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+
+    # Turn off buffering — required for SSE streaming to work
+    # Buffering = Nginx holds data before sending. For streaming we need
+    # data to flow immediately, so we turn this OFF
+    nginx.ingress.kubernetes.io/proxy-buffering: "off"
+
+    # Allow file uploads up to 50MB (for PDF, CSV, JSON attachments)
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+
+spec:
+  # SSL certificate will be stored in this Kubernetes secret
+  tls:
+    - hosts:
+        - yourdomain.com            # ← Replace with your domain
+      secretName: ollama-tls        # Kubernetes will auto-save the SSL cert here
+
+  rules:
+    - host: yourdomain.com          # ← Replace with your domain
+      http:
+        paths:
+
+          # All API calls (/api/...) → go to the Backend
+          - path: /api
+            pathType: Prefix        # Prefix = match anything that starts with /api
+            backend:
+              service:
+                name: ollama-backend-service   # Name of our backend service
+                port:
+                  number: 5005                 # Backend runs on port 5005
+
+          # Everything else (/) → go to the Frontend
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: ollama-frontend-service  # Name of our frontend service
+                port:
+                  number: 80                   # Frontend (Nginx) runs on port 80

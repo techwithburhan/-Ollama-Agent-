@@ -1,0 +1,22 @@
+apiVersion: storage.k8s.io/v1   # Kubernetes version for storage
+kind: StorageClass              # We are creating a StorageClass
+                                # StorageClass = tells Kubernetes HOW to create storage
+                                # Think of it as a "storage template"
+
+metadata:
+  name: aws-ebs                 # Name of this storage type
+                                # MongoDB will use this to request disk space
+
+provisioner: ebs.csi.aws.com   # Use AWS EBS (Elastic Block Store) to create the disk
+                                # EBS = hard drive in the cloud on AWS
+
+parameters:
+  type: gp3                     # Disk type: gp3 is the latest and fastest AWS disk
+  fsType: ext4                  # Format the disk with ext4 (standard Linux file system)
+  encrypted: "true"             # Encrypt the data on disk (security)
+
+reclaimPolicy: Retain           # When we delete the app, KEEP the data on disk
+                                # Retain = safe, data is not lost
+                                # Delete = data would be wiped (dangerous for production)
+
+allowVolumeExpansion: true      # Allow making the disk bigger later without downtime
