@@ -1,65 +1,119 @@
-apiVersion: v1          # Kubernetes version
-kind: ConfigMap         # We are creating a ConfigMap
-                        # ConfigMap = a place to store config/settings for our app
-                        # Think of it like a config file, but stored in Kubernetes
+# apiVersion: v1          # Kubernetes version
+# kind: ConfigMap         # We are creating a ConfigMap
+#                         # ConfigMap = a place to store config/settings for our app
+#                         # Think of it like a config file, but stored in Kubernetes
 
+# metadata:
+#   name: ollama-frontend-config    # Name of this ConfigMap
+#   namespace: ollama-agent         # Our namespace
+
+# data:
+#   # We are storing a custom Nginx config file here
+#   # Nginx is the web server that serves our React app inside the container
+#   # This config tells Nginx:
+#   #   1. Serve the React app
+#   #   2. Forward /api requests to the backend
+#   #   3. Support streaming (SSE) for AI chat
+
+#   nginx.conf: |
+#     worker_processes auto;
+
+#     events {
+#       worker_connections 1024;    # Max 1024 users connected at the same time
+#     }
+
+#     http {
+#       include /etc/nginx/mime.types;
+#       default_type application/octet-stream;
+
+#       # Enable gzip to make the app load faster
+#       gzip on;
+#       gzip_types text/plain text/css application/json application/javascript;
+
+#       server {
+#         listen 80;                # Listen on port 80
+#         root /usr/share/nginx/html;   # This is where the React build files are
+#         index index.html;
+
+#         # React Router fix: always serve index.html for any URL
+#         # Without this, refreshing /chat would give a 404
+#         location / {
+#           try_files $uri $uri/ /index.html;
+#         }
+
+#         # Forward /api requests to the backend service
+#         # The frontend calls /api/... and Nginx sends it to the backend
+#         location /api/ {
+#           proxy_pass http://ollama-backend-service:5005;
+
+#           # These 3 lines are required for SSE (streaming chat) to work
+#           proxy_http_version 1.1;
+#           proxy_set_header Connection '';
+#           proxy_buffering off;          # Don't buffer — send data immediately
+
+#           # Pass the real user IP to the backend
+#           proxy_set_header Host $host;
+#           proxy_set_header X-Real-IP $remote_addr;
+
+#           # Long timeout for AI responses (can take time)
+#           proxy_read_timeout 3600s;
+#         }
+
+#         # Health check URL — Kubernetes uses this to know if the app is alive
+#         location /healthz {
+#           return 200 'ok';
+#           add_header Content-Type text/plain;
+#         }
+#       }
+#     }
+
+apiVersion: v1
+kind: ConfigMap
 metadata:
-  name: ollama-frontend-config    # Name of this ConfigMap
-  namespace: ollama-agent         # Our namespace
+  name: ollama-frontend-config
+  namespace: ollama-agent
 
 data:
-  # We are storing a custom Nginx config file here
-  # Nginx is the web server that serves our React app inside the container
-  # This config tells Nginx:
-  #   1. Serve the React app
-  #   2. Forward /api requests to the backend
-  #   3. Support streaming (SSE) for AI chat
-
   nginx.conf: |
     worker_processes auto;
 
     events {
-      worker_connections 1024;    # Max 1024 users connected at the same time
+      worker_connections 1024;
     }
 
     http {
       include /etc/nginx/mime.types;
       default_type application/octet-stream;
 
-      # Enable gzip to make the app load faster
+      # Enable gzip compression
       gzip on;
       gzip_types text/plain text/css application/json application/javascript;
 
       server {
-        listen 80;                # Listen on port 80
-        root /usr/share/nginx/html;   # This is where the React build files are
+        listen 80;
+        root /usr/share/nginx/html;
         index index.html;
 
-        # React Router fix: always serve index.html for any URL
-        # Without this, refreshing /chat would give a 404
+        # React routing fix
         location / {
           try_files $uri $uri/ /index.html;
         }
 
-        # Forward /api requests to the backend service
-        # The frontend calls /api/... and Nginx sends it to the backend
+        # 🔥 API proxy to backend (IMPORTANT)
         location /api/ {
           proxy_pass http://ollama-backend-service:5005;
 
-          # These 3 lines are required for SSE (streaming chat) to work
           proxy_http_version 1.1;
-          proxy_set_header Connection '';
-          proxy_buffering off;          # Don't buffer — send data immediately
+          proxy_set_header Connection "";
+          proxy_buffering off;
 
-          # Pass the real user IP to the backend
           proxy_set_header Host $host;
           proxy_set_header X-Real-IP $remote_addr;
 
-          # Long timeout for AI responses (can take time)
           proxy_read_timeout 3600s;
         }
 
-        # Health check URL — Kubernetes uses this to know if the app is alive
+        # Health check
         location /healthz {
           return 200 'ok';
           add_header Content-Type text/plain;

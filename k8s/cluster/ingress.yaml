@@ -1,84 +1,84 @@
-# apiVersion: networking.k8s.io/v1    # Kubernetes version for networking
-# kind: Ingress                       # We are creating an Ingress
-#                                     # Ingress = the "front door" of our app
-#                                     # It receives traffic from the internet
-#                                     # and sends it to the right service
+# # ============================================================
+# # INGRESS - Ollama Agent
+# # Fixed: configuration-snippet removed (disabled in cluster)
+# # SSE streaming other annotations se handle hoga
+# # Command: kubectl apply -f cluster/ingress.yaml
+# # ============================================================
 
+# apiVersion: networking.k8s.io/v1
+# kind: Ingress
 # metadata:
-#   name: ollama-agent-ingress        # Name of this ingress
-#   namespace: ollama-agent           # Our namespace (must match everywhere)
-
+#   name: ollama-agent-ingress
+#   namespace: ollama-agent
 #   annotations:
-#     # Which tool handles this Ingress (Nginx is most common)
 #     kubernetes.io/ingress.class: "nginx"
 
-#     # Auto-create a free SSL certificate (HTTPS)
-#     cert-manager.io/cluster-issuer: "letsencrypt-prod"
-
-#     # Increase timeout to 1 hour — needed because our AI chat uses
-#     # streaming (SSE) which keeps the connection open for a long time
+#     # ── Timeouts - SSE ke liye zaroori ────────────────────
 #     nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
 #     nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+#     nginx.ingress.kubernetes.io/proxy-connect-timeout: "60"
 
-#     # Turn off buffering — required for SSE streaming to work
-#     # Buffering = Nginx holds data before sending. For streaming we need
-#     # data to flow immediately, so we turn this OFF
+#     # ── SSE Streaming Fix ─────────────────────────────────
 #     nginx.ingress.kubernetes.io/proxy-buffering: "off"
+#     # ✅ Yeh sabse important hai SSE ke liye
+#     # Tokens turant browser ko forward honge
 
-#     # Allow file uploads up to 50MB (for PDF, CSV, JSON attachments)
+#     nginx.ingress.kubernetes.io/proxy-http-version: "1.1"
+#     # HTTP 1.1 = persistent connection = SSE works
+
+#     # ── Request Size ──────────────────────────────────────
 #     nginx.ingress.kubernetes.io/proxy-body-size: "50m"
 
+#     # ── CORS ──────────────────────────────────────────────
+#     nginx.ingress.kubernetes.io/enable-cors: "true"
+#     nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+#     nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, DELETE, OPTIONS, PUT"
+#     nginx.ingress.kubernetes.io/cors-allow-headers: "Content-Type, Authorization, Accept"
+#     nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
+
 # spec:
-#   # SSL certificate will be stored in this Kubernetes secret
-#   tls:
-#     - hosts:
-#         - yourdomain.com            # ← Replace with your domain
-#       secretName: ollama-tls        # Kubernetes will auto-save the SSL cert here
+#   ingressClassName: nginx
 
 #   rules:
-#     - host: yourdomain.com          # ← Replace with your domain
-#       http:
+#     - http:
 #         paths:
-
-#           # All API calls (/api/...) → go to the Backend
-#           - path: /api
-#             pathType: Prefix        # Prefix = match anything that starts with /api
+#           # Specific path pehle - /api/chat SSE streaming
+#           - path: /api/chat
+#             pathType: Prefix
 #             backend:
 #               service:
-#                 name: ollama-backend-service   # Name of our backend service
+#                 name: ollama-backend-service
 #                 port:
-#                   number: 5005                 # Backend runs on port 5005
+#                   number: 5005
 
-#           # Everything else (/) → go to the Frontend
+#           # Baaki saare API routes
+#           - path: /api
+#             pathType: Prefix
+#             backend:
+#               service:
+#                 name: ollama-backend-service
+#                 port:
+#                   number: 5005
+
+#           # Frontend - sabse last
 #           - path: /
 #             pathType: Prefix
 #             backend:
 #               service:
-#                 name: ollama-frontend-service  # Name of our frontend service
+#                 name: ollama-frontend-service
 #                 port:
-#                   number: 80                   # Frontend (Nginx) runs on port 80
+#                   number: 80
+
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: ollama-agent-ingress
+  name: ollama-ingress
   namespace: ollama-agent
-  annotations:
-    kubernetes.io/ingress.class: "nginx"
-    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
-    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
-    nginx.ingress.kubernetes.io/proxy-buffering: "off"
-    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+
 spec:
   rules:
-    - http:                          # No "host:" field = matches localhost
+    - http:
         paths:
-          - path: /api
-            pathType: Prefix
-            backend:
-              service:
-                name: ollama-backend-service
-                port:
-                  number: 5005
           - path: /
             pathType: Prefix
             backend:
@@ -86,3 +86,11 @@ spec:
                 name: ollama-frontend-service
                 port:
                   number: 80
+
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: ollama-backend-service
+                port:
+                  number: 5005
