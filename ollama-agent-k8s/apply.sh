@@ -14,7 +14,7 @@ echo "Step 0/7 → Creating KIND cluster..."
 if kind get clusters 2>/dev/null | grep -q "^ollama-agent$"; then
   echo "⚠️  KIND cluster 'ollama-agent' already exists — skipping creation"
 else
-  kind create cluster --name ollama-agent --config cluster-create/kind-cluster.yaml
+  kind create cluster --name ollama-agent --config cluster-create/kind-config.yaml
   echo "✅ KIND cluster created"
 fi
 
