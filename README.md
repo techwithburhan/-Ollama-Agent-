@@ -882,88 +882,358 @@ Internet Traffic
                                 │
                          Persistent Storage
 ```
+☸️ Kubernetes Deployment Guide
+
+**Ollama Agent Kubernetes Apply Automation** — Shortcut Applying for all Kubernetes 
+
+- Directory -> Agent-Pilot/ollama-agent
+
+```bash
+chmod +x apply.sh
+./apply.sh
+```
+
+**Ollama Agent Kubernetes Destroy Automation** — Shortcut Applying for all Kubernetes 
+
+- Directory -> Agent-Pilot/ollama-agent
+
+```bash
+chmod +x destroy.sh
+./destroy.sh
+```
+
+**Notes:-** — It Will Take your Time Maybe 10 Mint or 15 Mint to Setup cCompletely  
 
 ---
 
-## 🆚 Setup On VM managed it Self 
+# ☸️ Kubernetes Deployment Guide
 
-### Directory 
+> **Ollama Agent** — Step-by-step manual deployment on local KIND cluster
+> Created by **[@techwithburhan](https://github.com/techwithburhan)**
+
+---
+
+## 📋 Table of Contents
+
+* [Prerequisites](#-prerequisites)
+* [Project Structure](#-project-structure)
+* [Step 0 — KIND Cluster](#-step-0--create-kind-cluster)
+* [Step 1 — Nginx Ingress](#-step-1--install-nginx-ingress-controller)
+* [Step 2 — Namespace & Storage](#-step-2--namespace--storage)
+* [Step 3 — Secret](#-step-3--backend-secret)
+* [Step 4 — MongoDB](#-step-4--mongodb)
+* [Step 5 — Ollama AI](#-step-5--ollama-ai-engine)
+* [Step 6 — Backend](#-step-6--backend-nodejs)
+* [Step 7 — Frontend](#-step-7--frontend-react)
+* [Step 8 — Ingress](#-step-8--ingress-routing)
+* [Verify Everything](#-verify-everything)
+* [Port Forwarding](#-port-forwarding)
+* [Health Checks](#-health-checks)
+* [Useful Commands](#-useful-commands)
+* [Cleanup](#-cleanup)
+* [Troubleshooting](#-troubleshooting)
+
+---
+
+## 🚀 Step 0 — Create KIND Cluster
+
+Create a local KIND (Kubernetes IN Docker) cluster.
+
+**Check if a cluster already exists:**
+
 ```bash
-Agent-Pilot/k8s/kind-cluster-create
+kind get clusters
 ```
 
-### 🚀 Create KIND Cluster
+**If not, create one:**
+
 ```bash
-kind create cluster --name ollama-agent --config kind-config.yml
+kind create cluster --name ollama-agent --config cluster-create/kind-cluster.yaml
 ```
-### 🔍 Verify Cluster
+
+**Verify cluster:**
+
 ```bash
 kubectl cluster-info --context kind-ollama-agent
 ```
-### Get Nodes 
+
+**Check nodes:**
+
 ```bash
 kubectl get nodes
 ```
-<img width="1239" height="626" alt="image" src="https://github.com/user-attachments/assets/ecb4680f-b5f5-47cd-81d6-c08b9bd915f9" />
 
-### 1 🚀 Create namesapce directory ->
-```dir
-Agent-Pilot/k8s/cluster
+Expected output:
+
 ```
-### Apply Namespace
+NAME                         STATUS   ROLES           AGE   VERSION
+ollama-agent-control-plane   Ready    control-plane   30s   v1.27.x
+```
+
+**Wait 3 seconds:**
+
 ```bash
-kubectl apply -f namespace.yml
+sleep 3
 ```
-### 🔍 Verify
-```bash
-kubectl get namespaces
-```
-<img width="955" height="256" alt="image" src="https://github.com/user-attachments/assets/178f89fe-59a6-49bf-bd63-9b508141c38d" />
-
-
-### 🎯 Summary
-- Namespace name → ollama-agent
-- Used to isolate your application
-- Helps in better management & organization
-
-## 🆚 Setup On AWS EKS managed By AWS  
-
-## 🆚 Docker vs Kubernetes
-
-| Feature | Docker | Kubernetes |
-|--------|--------|-----------|
-| Run containers | ✅ | ✅ |
-| Auto-restart | ❌ | ✅ |
-| Auto-scale | ❌ | ✅ |
-| Zero downtime deploy | ❌ | ✅ |
-| Load balancing | ❌ | ✅ |
-| Self-healing | ❌ | ✅ |
-| Best use | Local | Production |
 
 ---
 
-## 💡 One Line Summary
+## 🌐 Step 1 — Install Nginx Ingress Controller
 
-```text
-namespace.yaml → Isolated environment
-frontend/deployment.yaml → Run frontend pods
-frontend/service.yaml → Expose frontend
-frontend/hpa.yaml → Auto-scale frontend
-frontend/configmap.yaml → Frontend config
+Ingress Controller is required for traffic routing.
 
-backend/deployment.yaml → Run backend pods
-backend/service.yaml → Backend internal access
-backend/hpa.yaml → Auto-scale backend
-backend/configmap.yaml → Backend config
-backend/secret.yaml → Secure credentials
+**Install:**
 
-mongodb/statefulset.yaml → MongoDB deployment
-mongodb/service.yaml → MongoDB access
-mongodb/pvc.yaml → Persistent storage
-
-cluster/ingress.yaml → Traffic routing
-cluster/storageclass.yaml → AWS storage provisioning
+```bash
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
 ```
+
+> ⚠️ If you encounter a 429 rate limit error, use Helm:
+
+```bash
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+helm repo update
+helm install ingress-nginx ingress-nginx/ingress-nginx \
+  --namespace ingress-nginx \
+  --create-namespace
+```
+
+**Wait until ready:**
+
+```bash
+kubectl wait --namespace ingress-nginx \
+  --for=condition=ready pod \
+  --selector=app.kubernetes.io/component=controller \
+  --timeout=120s
+```
+
+**Verify:**
+
+```bash
+kubectl get pods -n ingress-nginx
+```
+
+---
+
+## 🏷️ Step 2 — Namespace & Storage
+
+Create a dedicated namespace and storage class.
+
+```bash
+kubectl apply -f cluster/namespace.yaml
+kubectl apply -f cluster/storageclass.yaml
+```
+
+**Verify:**
+
+```bash
+kubectl get namespace ollama-agent
+kubectl get storageclass
+```
+
+**Wait 2 seconds:**
+
+```bash
+sleep 2
+```
+
+---
+
+## 🔐 Step 3 — Backend Secret
+
+Apply JWT secret and MongoDB credentials.
+
+> ⚠️ Apply the secret **before MongoDB** because MongoDB needs credentials at startup.
+
+```bash
+kubectl apply -f backend/secret.yaml
+```
+
+**Verify:**
+
+```bash
+kubectl get secret -n ollama-agent
+```
+
+---
+
+## 🗄️ Step 4 — MongoDB
+
+Deploy the database (backend depends on it).
+
+```bash
+kubectl apply -f mongodb/configmap.yaml
+kubectl apply -f mongodb/persistentvolumeclaim.yaml
+kubectl apply -f mongodb/service.yaml
+kubectl apply -f mongodb/statefulset.yaml
+```
+
+**Wait for MongoDB:**
+
+```bash
+kubectl rollout status statefulset/ollama-mongodb -n ollama-agent --timeout=180s
+```
+
+**Verify:**
+
+```bash
+kubectl get pods -n ollama-agent | grep mongodb
+```
+
+---
+
+## 🤖 Step 5 — Ollama AI Engine
+
+Deploy Ollama and download the model.
+
+```bash
+kubectl apply -f ollama/pvc.yaml
+kubectl apply -f ollama/configmap.yaml
+kubectl apply -f ollama/service.yaml
+kubectl apply -f ollama/nodeport.yaml
+kubectl apply -f ollama/deployment.yaml
+```
+
+**Wait for deployment:**
+
+```bash
+kubectl rollout status deployment/ollama -n ollama-agent --timeout=600s
+```
+
+---
+
+## ⚙️ Step 6 — Backend (Node.js)
+
+```bash
+kubectl apply -f backend/configmap.yaml
+kubectl apply -f backend/deployment.yaml
+kubectl apply -f backend/service.yaml
+kubectl apply -f backend/hpa.yaml
+```
+
+**Wait for backend:**
+
+```bash
+kubectl rollout status deployment/ollama-backend -n ollama-agent --timeout=120s
+```
+
+---
+
+## 🎨 Step 7 — Frontend (React + Nginx)
+
+```bash
+kubectl apply -f frontend/configmap.yaml
+kubectl apply -f frontend/deployment.yaml
+kubectl apply -f frontend/service.yaml
+kubectl apply -f frontend/hpa.yaml
+```
+
+**Wait for frontend:**
+
+```bash
+kubectl rollout status deployment/ollama-frontend -n ollama-agent --timeout=120s
+```
+
+---
+
+## 🌐 Step 8 — Ingress Routing
+
+```bash
+kubectl apply -f cluster/ingress.yaml
+```
+
+**Verify:**
+
+```bash
+kubectl get ingress -n ollama-agent
+```
+
+---
+
+## 🔌 Port Forwarding
+
+```bash
+kubectl port-forward -n ingress-nginx \
+  svc/ingress-nginx-controller 8080:80
+```
+
+Access:
+
+* Frontend → http://localhost:8080
+* Backend → http://localhost:8080/api
+
+---
+
+## 🏥 Health Checks
+
+```bash
+curl -s http://localhost:5005/
+curl -s http://localhost:11434/api/tags
+```
+
+---
+
+## 🛠️ Useful Commands
+
+```bash
+kubectl get all -n ollama-agent
+kubectl logs -f -n ollama-agent -l app=ollama-backend
+kubectl describe pod -n ollama-agent <pod-name>
+kubectl get events -n ollama-agent
+```
+
+---
+
+## 🗑️ Cleanup
+
+```bash
+kubectl delete namespace ollama-agent
+kubectl delete namespace ingress-nginx
+kind delete cluster --name ollama-agent
+```
+
+---
+
+## 🐞 Troubleshooting
+
+### PVC Pending
+
+```bash
+kubectl get pvc -n ollama-agent
+kubectl describe pvc mongodb-pvc -n ollama-agent
+```
+
+### Pod CrashLoopBackOff
+
+```bash
+kubectl logs -n ollama-agent POD_NAME --previous
+kubectl describe pod -n ollama-agent POD_NAME
+```
+
+### Ingress Not Working
+
+```bash
+kubectl get pods -n ingress-nginx
+kubectl describe ingress -n ollama-agent
+```
+
+---
+
+## 📊 Architecture
+
+```
+Ingress → Frontend → Backend → MongoDB + Ollama
+```
+
+---
+
+## 🎯 Final Notes
+
+* Always deploy dependencies first (MongoDB)
+* Always verify each step
+* Always check logs for debugging
+* Use Ingress for routing traffic
+
 
 ---
 
