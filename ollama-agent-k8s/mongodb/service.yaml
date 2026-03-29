@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ollama-mongodb-headless
+  namespace: ollama-agent
+  labels:
+    app: ollama-mongodb
+spec:
+  clusterIP: None
+  selector:
+    app: ollama-mongodb
+  ports:
+    - name: mongodb
+      protocol: TCP
+      port: 27017
+      targetPort: 27017
+  publishNotReadyAddresses: true

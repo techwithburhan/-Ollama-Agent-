@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ollama-frontend
+  namespace: ollama-agent
+  labels:
+    app: ollama-frontend
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: ollama-frontend
+  template:
+    metadata:
+      labels:
+        app: ollama-frontend
+    spec:
+      initContainers:
+        - name: wait-for-backend
+          image: busybox:1.35
+          command:
+            - sh
+            - -c
+            - |
+              until nc -z ollama-backend-service 5005; do
+                echo "Waiting for backend...";
+                sleep 3;
+              done
+      containers:
+        - name: ollama-frontend
+          image: burhan503/ollama-agent-frontend:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: nginx-config
+              mountPath: /etc/nginx/nginx.conf
+              subPath: nginx.conf
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 80
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "300m"
+              memory: "256Mi"
+      volumes:
+        - name: nginx-config
+          configMap:
+            name: ollama-frontend-config
+            items:
+              - key: nginx.conf
+                path: nginx.conf

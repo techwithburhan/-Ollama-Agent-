@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ollama-mongodb-init
+  namespace: ollama-agent
+  labels:
+    app: ollama-mongodb
+data:
+  mongo-init.js: |
+    db = db.getSiblingDB("ollama-agent");
+    db.createCollection("users");
+    db.createCollection("chats");
+    db.users.createIndex({ email: 1 }, { unique: true });
+    db.users.createIndex({ username: 1 }, { unique: true });
+    db.chats.createIndex({ userId: 1, createdAt: -1 });

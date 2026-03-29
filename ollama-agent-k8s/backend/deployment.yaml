@@ -1,0 +1,93 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ollama-backend
+  namespace: ollama-agent
+  labels:
+    app: ollama-backend
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: ollama-backend
+  template:
+    metadata:
+      labels:
+        app: ollama-backend
+    spec:
+      terminationGracePeriodSeconds: 30
+      initContainers:
+        - name: wait-for-mongodb
+          image: busybox:1.35
+          command:
+            - sh
+            - -c
+            - |
+              until nc -z ollama-mongodb-headless 27017; do
+                echo "Waiting for MongoDB...";
+                sleep 5;
+              done
+              echo "MongoDB is ready!"
+        - name: wait-for-ollama
+          image: busybox:1.35
+          command:
+            - sh
+            - -c
+            - |
+              until nc -z ollama-service 11434; do
+                echo "Waiting for Ollama...";
+                sleep 5;
+              done
+              echo "Ollama is ready!"
+      containers:
+        - name: ollama-backend
+          image: burhan503/ollama-agent-backend:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 5005
+          envFrom:
+            - configMapRef:
+                name: ollama-backend-config
+          env:
+            - name: MONGO_URI
+              valueFrom:
+                secretKeyRef:
+                  name: ollama-backend-secret
+                  key: MONGO_URI
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: ollama-backend-secret
+                  key: JWT_SECRET
+          livenessProbe:
+            tcpSocket:
+              port: 5005
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            failureThreshold: 3
+            timeoutSeconds: 5
+          readinessProbe:
+            tcpSocket:
+              port: 5005
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            failureThreshold: 3
+            timeoutSeconds: 5
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "300m"
+              memory: "256Mi"
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
