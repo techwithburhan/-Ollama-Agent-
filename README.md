@@ -172,6 +172,19 @@ ollama-agent/
 | Git | Any | https://git-scm.com |
 
 ---
+## 🚀 Quick Install
+
+### Step 1 — Install Run Docker and Kubernetes
+```bash
+chmod +x install.sh
+./install.sh
+```
+### Then after it finishes:
+```bash
+newgrp docker
+./apply.sh
+```
+---
 
 ## 🚀 Quick Start
 
