@@ -1,0 +1,72 @@
+# # ============================================================
+# # CONFIGMAP - Ollama Configuration
+# # Ollama ke settings store karta hai
+# # Command: kubectl apply -f ollama/configmap.yaml
+# # ============================================================
+
+# apiVersion: v1                   # Core API version
+# kind: ConfigMap                  # Resource type → non-sensitive config
+# metadata:
+#   name: ollama-config            # ConfigMap naam
+#   namespace: ollama-agent        # Same namespace
+#   labels:
+#     app: ollama
+#     component: ai-engine
+#     environment: production
+
+# data:
+#   # ── Server Settings ──────────────────────────────────────
+#   OLLAMA_HOST: "0.0.0.0"        # Saare interfaces pe listen karo
+#   # 0.0.0.0 = cluster ke kisi bhi Pod se accessible
+#   # Yahi fix hai localhost problem ka
+
+#   OLLAMA_PORT: "11434"          # Default Ollama port
+
+#   # ── Model Settings ───────────────────────────────────────
+#   OLLAMA_MODELS: "/root/.ollama/models"  # Models storage path
+#   # PVC is path pe mount hogi
+
+#   OLLAMA_KEEP_ALIVE: "24h"      # Model RAM mein kitni der rahe
+#   # 24h = hamesha loaded - fast responses
+#   # 5m = default - memory bachao lekin slow
+
+#   OLLAMA_NUM_PARALLEL: "2"      # Parallel requests handle karo
+#   # Backend ke multiple pods se requests aayengi
+
+#   OLLAMA_MAX_LOADED_MODELS: "1" # Ek waqt mein 1 model RAM mein
+#   # Memory limit ke hisaab se set karo
+
+#   # ── Default Model ────────────────────────────────────────
+#   DEFAULT_MODEL: "llama2"       # Backend yeh model use karega by default
+
+#   # ── Available Models List ────────────────────────────────
+#   # Yeh models pull kiye hain:
+#   AVAILABLE_MODELS: "llama2,mistral,codellama"
+#   # Backend is list se dropdown populate karega
+
+
+# ============================================================
+# CONFIGMAP - Ollama Configuration
+# Local KIND cluster ke liye fixed version
+# Command: kubectl apply -f ollama/configmap.yaml
+# ============================================================
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ollama-config
+  namespace: ollama-agent
+  labels:
+    app: ollama
+    component: ai-engine
+    environment: production
+
+data:
+  OLLAMA_HOST: "0.0.0.0"              # Saare interfaces pe listen - cluster wide
+  OLLAMA_PORT: "11434"                # Default port
+  OLLAMA_MODELS: "/root/.ollama/models"  # Models storage path (PVC mounted)
+  OLLAMA_KEEP_ALIVE: "24h"            # Model RAM mein loaded rahe - fast responses
+  OLLAMA_NUM_PARALLEL: "2"            # 2 parallel requests handle karo
+  OLLAMA_MAX_LOADED_MODELS: "1"       # 1 model RAM mein - memory bachao
+  DEFAULT_MODEL: "llama2"             # ✅ Default model = llama2
+  AVAILABLE_MODELS: "llama2"          # Init container ne yahi download kiya

@@ -1,35 +1,92 @@
-apiVersion: v1          # Kubernetes version
-kind: ConfigMap         # We are creating a ConfigMap
-                        # ConfigMap stores non-secret settings as environment variables
-                        # These get injected into the backend container at startup
+# apiVersion: v1          # Kubernetes version
+# kind: ConfigMap         # We are creating a ConfigMap
+#                         # ConfigMap stores non-secret settings as environment variables
+#                         # These get injected into the backend container at startup
 
+# metadata:
+#   name: ollama-backend-config     # Name of this ConfigMap
+#   namespace: ollama-agent         # Our namespace
+
+# data:
+#   # These become environment variables inside the backend container
+
+#   PORT: "5005"                    # Express.js will listen on this port
+#                                   # Must match containerPort in deployment.yaml
+
+#   NODE_ENV: "production"          # Tells Node.js we are in production mode
+#                                   # Enables optimizations, disables debug output
+
+#   OLLAMA_API: "http://host.docker.internal:11434/api"
+#                                   # URL to reach Ollama (the AI engine)
+#                                   # host.docker.internal = the machine running Kubernetes
+#                                   # On AWS: replace with your EC2 private IP
+#                                   # Example: http://10.0.1.50:11434/api
+
+#   OLLAMA_MODEL: "llama2:latest"   # Which AI model to use by default
+#                                   # Options: llama2, mistral, llama3, codellama, phi
+
+#   CORS_ORIGIN: "*"                # Which websites can call our API
+#                                   # * = allow all (fine for development)
+#                                   # Production: change to "https://yourdomain.com"
+
+#   MAX_BODY_SIZE: "50mb"           # Max request size (for file uploads like PDF, CSV)
+
+#   REQUEST_TIMEOUT: "120000"       # How long to wait for a response (120 seconds)
+#                                   # AI responses can be slow, so we give extra time
+
+# ============================================================
+# BACKEND CONFIGMAP UPDATE
+# Ollama service Kubernetes mein deploy hone ke baad
+# Backend ko localhost nahi, ollama-service use karna hai
+#
+# Yeh patch command chalao:
+# kubectl patch configmap backend-config -n ollama-agent \
+#   --type merge \
+#   -p '{"data":{"OLLAMA_API":"http://ollama-service:11434/api"}}'
+#
+# Ya poora configmap dobara apply karo:
+# kubectl apply -f ollama/backend-configmap-update.yaml
+# ============================================================
+
+# apiVersion: v1
+# kind: ConfigMap
+# metadata:
+#   name: backend-config           # backend/configmap.yaml ka naam
+#   namespace: ollama-agent        # Same namespace
+#   labels:
+#     app: ollama-backend
+#     environment: production
+
+# data:
+#   # ── Server Configuration ────────────────────────────────
+#   PORT: "5005"
+#   NODE_ENV: "production"
+
+#   # ── Ollama Configuration - UPDATED ──────────────────────
+#   OLLAMA_API: "http://ollama-service:11434/api"
+#   # ✅ ollama-service = ollama/service.yaml ka naam
+#   # ✅ Kubernetes DNS automatically resolve karega
+#   # ✅ localhost problem permanently fix ho gayi
+#   # Format: http://SERVICE_NAME.NAMESPACE.svc.cluster.local:PORT
+#   # Short form bhi kaam karta hai same namespace mein:
+#   # http://ollama-service:11434/api
+
+#   OLLAMA_MODEL: "llama2"
+
+#   # ── CORS ────────────────────────────────────────────────
+#   CORS_ORIGIN: "http://frontend-service:80"
+
+apiVersion: v1
+kind: ConfigMap
 metadata:
-  name: ollama-backend-config     # Name of this ConfigMap
-  namespace: ollama-agent         # Our namespace
+  name: ollama-backend-config   # ✅ FIXED
+  namespace: ollama-agent
 
 data:
-  # These become environment variables inside the backend container
+  PORT: "5005"
+  NODE_ENV: "production"
 
-  PORT: "5005"                    # Express.js will listen on this port
-                                  # Must match containerPort in deployment.yaml
+  OLLAMA_API: "http://ollama-service:11434/api"
+  OLLAMA_MODEL: "llama2"
 
-  NODE_ENV: "production"          # Tells Node.js we are in production mode
-                                  # Enables optimizations, disables debug output
-
-  OLLAMA_API: "http://host.docker.internal:11434/api"
-                                  # URL to reach Ollama (the AI engine)
-                                  # host.docker.internal = the machine running Kubernetes
-                                  # On AWS: replace with your EC2 private IP
-                                  # Example: http://10.0.1.50:11434/api
-
-  OLLAMA_MODEL: "llama2:latest"   # Which AI model to use by default
-                                  # Options: llama2, mistral, llama3, codellama, phi
-
-  CORS_ORIGIN: "*"                # Which websites can call our API
-                                  # * = allow all (fine for development)
-                                  # Production: change to "https://yourdomain.com"
-
-  MAX_BODY_SIZE: "50mb"           # Max request size (for file uploads like PDF, CSV)
-
-  REQUEST_TIMEOUT: "120000"       # How long to wait for a response (120 seconds)
-                                  # AI responses can be slow, so we give extra time
+  CORS_ORIGIN: "http://frontend-service:80"

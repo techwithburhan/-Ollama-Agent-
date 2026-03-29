@@ -1,0 +1,49 @@
+# ============================================================
+# SERVICE - Ollama NodePort (External/Debug Access)
+# Yeh file bahar se Ollama directly test karne ke liye hai
+# Development aur debugging ke liye use karo
+# Production mein sirf service.yaml (ClusterIP) use karo
+#
+# Access URL:
+# http://localhost:11434  (kubectl port-forward ke saath)
+# http://NODE_IP:30434    (NodePort direct access)
+#
+# Command: kubectl apply -f ollama/nodeport.yaml
+# ============================================================
+
+apiVersion: v1                   # Core API version
+kind: Service                    # Resource type
+metadata:
+  name: ollama-nodeport          # Alag naam - service.yaml se conflict nahi hoga
+  # Dono services ek saath chal sakti hain
+  namespace: ollama-agent        # Same namespace
+  labels:
+    app: ollama
+    component: ai-engine
+    access-type: external-debug  # Debug ke liye hai yeh tag
+
+spec:
+  type: NodePort                 # Node ke port se bahar se accessible
+  # NodePort = Node ka ek port open hota hai
+  # Koi bhi NODE_IP:30434 pe Ollama access kar sakta hai
+
+  selector:
+    app: ollama                  # Same Ollama Pods pe traffic jaayega
+
+  ports:
+    - name: ollama-api
+      port: 11434                # Cluster ke andar port
+      targetPort: 11434          # Container ka port
+      nodePort: 30434            # Bahar se access karne ka port (30000-32767)
+      # http://YOUR_NODE_IP:30434/api/tags
+      protocol: TCP
+
+# ============================================================
+# PORT-FORWARD COMMANDS (Recommended for local testing)
+# kubectl port-forward -n ollama-agent service/ollama-service 11434:11434
+# phir browser mein: http://localhost:11434/api/tags
+#
+# NODEPORT DIRECT ACCESS:
+# NODE_IP=$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[0].address}')
+# curl http://$NODE_IP:30434/api/tags
+# ============================================================

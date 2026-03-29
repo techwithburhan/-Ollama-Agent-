@@ -1,0 +1,44 @@
+# ============================================================
+# SERVICE - Ollama (ClusterIP - Internal Access)
+# Cluster ke andar saare Pods is service se Ollama access karenge
+# Backend Pod: http://ollama-service:11434/api/generate
+# Bahar se directly accessible NAHI hoga - security ke liye
+# Command: kubectl apply -f ollama/service.yaml
+# ============================================================
+
+apiVersion: v1                   # Core API version
+kind: Service                    # Resource type → stable network endpoint
+metadata:
+  name: ollama-service           # Service naam
+  # Backend ConfigMap mein yeh naam use karo:
+  # OLLAMA_API: "http://ollama-service:11434/api"
+  namespace: ollama-agent        # Same namespace - backend se communicate hoga
+  labels:
+    app: ollama                  # deployment.yaml se match
+    component: ai-engine
+    environment: production
+
+spec:
+  type: ClusterIP                # Sirf cluster ke andar accessible
+  # ClusterIP = internal only - bahar se access nahi
+  # Backend Pod yahan connect karega naam se:
+  # http://ollama-service:11434
+
+  selector:
+    app: ollama                  # deployment.yaml ke Pod labels se match
+    # Yeh service traffic in Pods pe forward karegi
+
+  ports:
+    - name: ollama-api           # Port naam
+      port: 11434                # Service ka port - backend yahan call karega
+      targetPort: 11434          # Container ka port - deployment.yaml se match
+      protocol: TCP
+
+  # ── Session Affinity ────────────────────────────────────
+  sessionAffinity: ClientIP      # Ek client hamesha same Pod pe jaaye
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 3600       # 1 hour session maintain karo
+  # ClientIP affinity isliye:
+  # Ollama mein model warm-up hoti hai
+  # Same Pod pe jaane se faster responses milti hain

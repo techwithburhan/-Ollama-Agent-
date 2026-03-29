@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ollama-models-pvc        # deployment.yaml mein yahi naam hai
+  namespace: ollama-agent
+  labels:
+    app: ollama
+    component: ai-engine
+    environment: production
+
+spec:
+  accessModes:
+    - ReadWriteOnce
+
+  storageClassName: standard     # ✅ KIND/Local ke liye
+  # ❌ ollama-ebs-storage → AWS only, local mein pending rahega
+  # ✅ standard → KIND, Minikube, Docker Desktop sab mein kaam karta hai
+  # AWS EKS pe: storageClassName: ollama-ebs-storage karo
+
+  resources:
+    requests:
+      storage: 20Gi

@@ -1,0 +1,358 @@
+# # ============================================================
+# # DEPLOYMENT - Ollama AI Engine
+# # Local LLM server jo AI responses generate karta hai
+# # Backend is service se connect karega - localhost nahi
+# # Namespace: ollama-agent (saari services ek jagah)
+# # Command: kubectl apply -f ollama/deployment.yaml
+# # ============================================================
+
+# apiVersion: apps/v1              # Kubernetes Apps API version
+# kind: Deployment                 # Resource type → manages Pods
+# metadata:
+#   name: ollama                   # Deployment naam
+#   namespace: ollama-agent        # Same namespace - backend se communicate hoga
+#   labels:
+#     app: ollama                  # Label for identification
+#     component: ai-engine         # Component type
+#     environment: production
+
+# spec:
+#   replicas: 1                    # Sirf 1 Ollama instance
+#   # Ollama ko scale karna complicated hai kyunki:
+#   # - Model weights RAM mein load hoti hain (~4GB per model)
+#   # - Multiple instances = multiple RAM usage
+#   # - GPU hone pe GPU se bhi share hota hai
+#   # Production GPU cluster mein replicas badhao
+
+#   # ── Update Strategy ──────────────────────────────────────
+#   strategy:
+#     type: Recreate               # Pehle purana band karo, phir naya chalao
+#     # RollingUpdate use nahi kiya kyunki:
+#     # Ollama ke 2 instances ek saath chalane se
+#     # double RAM use hogi (8GB+) - crash ho sakta hai
+#     # Recreate = safe for memory-heavy applications
+
+#   selector:
+#     matchLabels:
+#       app: ollama                # Deployment manages Pods with this label
+
+#   template:
+#     metadata:
+#       labels:
+#         app: ollama              # Pod label - selector se match karna zaroori
+#         component: ai-engine
+
+#     spec:
+#       # ── Init Container ───────────────────────────────────
+#       # Ollama start hone ke baad model automatically pull karega
+#       # Pehli baar mein model download hogi (~3.8GB for llama2)
+#       initContainers:
+#         - name: pull-model       # Init container naam
+#           image: ollama/ollama:latest  # Official Ollama image
+#           command:
+#             - sh
+#             - -c
+#             - |
+#               echo "Ollama server start kar raha hoon model pull ke liye..."
+#               ollama serve &
+#               OLLAMA_PID=$!
+#               echo "5 second wait karo server ready hone ke liye..."
+#               sleep 5
+#               echo "llama2 model pull kar raha hoon..."
+#               ollama pull llama2
+#               echo "✅ llama2 model ready!"
+#               # Extra models chahiye toh add karo:
+#               # ollama pull mistral
+#               # ollama pull codellama
+#               kill $OLLAMA_PID
+#           # Model data volume mein save hogi
+#           # Dobara restart pe download nahi hoga
+#           volumeMounts:
+#             - name: ollama-models-storage  # Volume naam - neeche se match
+#               mountPath: /root/.ollama     # Ollama models yahan store karta hai
+
+#           resources:
+#             requests:
+#               cpu: "500m"
+#               memory: "1Gi"
+#             limits:
+#               cpu: "2000m"
+#               memory: "4Gi"
+
+#       # ── Main Container ───────────────────────────────────
+#       containers:
+#         - name: ollama           # Container naam
+#           image: ollama/ollama:latest  # Official Ollama Docker image
+#           # DockerHub: https://hub.docker.com/r/ollama/ollama
+
+#           imagePullPolicy: IfNotPresent
+#           # IfNotPresent = already downloaded hai toh dobara mat khicho
+
+#           # ── Command ──────────────────────────────────────
+#           command: ["ollama", "serve"]
+#           # ollama serve = REST API server start karo
+#           # Port 11434 pe listen karega
+
+#           # ── Ports ────────────────────────────────────────
+#           ports:
+#             - containerPort: 11434   # Ollama ka default port
+#               name: ollama-api       # Port naam - service mein reference hoga
+#               protocol: TCP
+
+#           # ── Environment Variables ─────────────────────────
+#           env:
+#             - name: OLLAMA_HOST
+#               value: "0.0.0.0"       # Saare interfaces pe listen karo
+#               # 0.0.0.0 = cluster ke kisi bhi Pod se accessible hoga
+#               # localhost hota toh sirf container khud access kar sakta
+
+#             - name: OLLAMA_MODELS
+#               value: "/root/.ollama/models"  # Models storage path
+
+#             - name: OLLAMA_KEEP_ALIVE
+#               value: "24h"           # Model 24 ghante RAM mein loaded rahe
+#               # Default: 5 minutes - bar bar load/unload se slow hoga
+#               # 24h = fast responses hamesha
+
+#             - name: OLLAMA_NUM_PARALLEL
+#               value: "2"             # Ek waqt mein 2 requests handle karo
+#               # Backend ke multiple pods se requests aayengi
+#               # 2 parallel = better throughput
+
+#             - name: OLLAMA_MAX_LOADED_MODELS
+#               value: "1"             # Ek waqt mein 1 model RAM mein
+#               # Limited RAM hai isliye 1 model kaafi hai
+#               # GPU instance pe zyada kar sakte ho
+
+#           # ── Volume Mounts ────────────────────────────────
+#           volumeMounts:
+#             - name: ollama-models-storage
+#               mountPath: /root/.ollama  # Models yahan persist hongi
+#               # Volume ke bina restart pe model dobara download hogi
+
+#           # ── Resources ────────────────────────────────────
+#           resources:
+#             requests:
+#               cpu: "1000m"       # 1 CPU core minimum - inference ke liye
+#               memory: "4Gi"      # 4GB RAM minimum
+#               # llama2:7B quantized = ~3.8GB RAM chahiye
+#               # Requests se kam hoga toh Pod schedule nahi hoga
+
+#             limits:
+#               cpu: "4000m"       # Maximum 4 CPU cores
+#               memory: "8Gi"      # Maximum 8GB RAM
+#               # Agar zyada models load karo toh limit badhao
+
+#             # ── GPU Support (Optional) ────────────────────
+#             # GPU instance pe uncomment karo (g4dn.xlarge etc)
+#             # limits:
+#             #   nvidia.com/gpu: 1  # 1 GPU assign karo
+
+#           # ── Health Checks ────────────────────────────────
+#           livenessProbe:
+#             httpGet:
+#               path: /api/tags    # Ollama ka health endpoint
+#               port: 11434        # Ollama port
+#             initialDelaySeconds: 60    # Model load hone mein time lagta hai
+#             periodSeconds: 30          # Har 30 second mein check
+#             timeoutSeconds: 10         # 10 second timeout
+#             failureThreshold: 5        # 5 fail → restart (model loading slow)
+
+#           readinessProbe:
+#             httpGet:
+#               path: /api/tags    # Ready hai tab jo /api/tags respond kare
+#               port: 11434
+#             initialDelaySeconds: 30    # 30 second baad pehla check
+#             periodSeconds: 15          # Har 15 second mein
+#             timeoutSeconds: 10
+#             failureThreshold: 3        # 3 fail → traffic mat bhejo
+
+#       # ── Volumes ──────────────────────────────────────────
+#       volumes:
+#         - name: ollama-models-storage
+#           persistentVolumeClaim:
+#             claimName: ollama-models-pvc  # ollama/pvc.yaml se match
+#             # Models persist hongi - restart pe download nahi hogi
+
+#       # ── Node Selector (Optional) ─────────────────────────
+#       # GPU node pe schedule karna chahte ho toh uncomment karo
+#       # nodeSelector:
+#       #   node.kubernetes.io/instance-type: g4dn.xlarge  # AWS GPU instance
+
+#       # ── Tolerations (Optional) ───────────────────────────
+#       # GPU nodes pe taint hoti hai isliye toleration add karo
+#       # tolerations:
+#       #   - key: "nvidia.com/gpu"
+#       #     operator: "Exists"
+#       #     effect: "NoSchedule"
+
+#       terminationGracePeriodSeconds: 60  # Model unload ke liye time do
+
+# ============================================================
+# DEPLOYMENT - Ollama AI Engine
+# LOCAL KIND CLUSTER VERSION - Fixed
+# Changes:
+#   1. ConfigMap se env variables lo
+#   2. Init container timeout badha diya (3.8GB download)
+#   3. Resources kam kiye local machine ke liye
+#   4. llama2 model explicitly set
+# Command: kubectl apply -f ollama/deployment.yaml
+# ============================================================
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ollama
+  namespace: ollama-agent
+  labels:
+    app: ollama
+    component: ai-engine
+    environment: production
+
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate               # RAM heavy app - Recreate safe hai
+
+  selector:
+    matchLabels:
+      app: ollama
+
+  template:
+    metadata:
+      labels:
+        app: ollama
+        component: ai-engine
+
+    spec:
+      # ── Init Container - Model Download ──────────────────
+      # Main container se PEHLE chalta hai
+      # llama2 model download karke volume mein save karta hai
+      # Dobara restart pe download nahi hoga - volume mein saved hai
+      initContainers:
+        - name: pull-llama2
+          image: ollama/ollama:latest
+          command:
+            - sh
+            - -c
+            - |
+              # Pehle check karo model already hai ya nahi
+              if [ -d "/root/.ollama/models/manifests/registry.ollama.ai/library/llama2" ]; then
+                echo "✅ llama2 already exists - skipping download"
+                exit 0
+              fi
+
+              echo "🚀 Ollama server start kar raha hoon..."
+              ollama serve &
+              OLLAMA_PID=$!
+
+              # Server ready hone ka wait karo
+              echo "⏳ Server ready hone ka wait..."
+              for i in $(seq 1 30); do
+                if curl -s http://localhost:11434/api/tags > /dev/null 2>&1; then
+                  echo "✅ Server ready!"
+                  break
+                fi
+                echo "  Waiting... ($i/30)"
+                sleep 2
+              done
+
+              # llama2 pull karo with output
+              echo "📦 llama2 download shuru ho raha hai (~3.8GB)..."
+              echo "⚠️  Internet speed ke hisaab se 5-20 min lag sakte hain"
+              ollama pull llama2
+
+              echo "✅ llama2 ready!"
+              ollama list
+
+              # Server band karo
+              kill $OLLAMA_PID 2>/dev/null || true
+              wait $OLLAMA_PID 2>/dev/null || true
+              echo "✅ Init complete!"
+
+          volumeMounts:
+            - name: ollama-models-storage
+              mountPath: /root/.ollama  # Models yahan save hongi PVC mein
+
+          # ── Init Container Resources ──────────────────────
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "2Gi"      # Download ke liye 2GB kaafi
+            limits:
+              cpu: "2000m"
+              memory: "4Gi"
+
+          # ── Init Container Env ────────────────────────────
+          env:
+            - name: OLLAMA_HOST
+              value: "0.0.0.0"
+            - name: OLLAMA_MODELS
+              value: "/root/.ollama/models"
+
+      # ── Main Container - Ollama Server ───────────────────
+      containers:
+        - name: ollama
+          image: ollama/ollama:latest
+          imagePullPolicy: IfNotPresent
+
+          command: ["ollama", "serve"]
+
+          ports:
+            - containerPort: 11434
+              name: ollama-api
+              protocol: TCP
+
+          # ── Environment Variables from ConfigMap ──────────
+          # ConfigMap ke saare variables yahan inject honge
+          envFrom:
+            - configMapRef:
+                name: ollama-config    # ollama/configmap.yaml
+
+          # Extra variables jo ConfigMap mein nahi hain
+          env:
+            - name: OLLAMA_HOST
+              value: "0.0.0.0"        # 0.0.0.0 = cluster wide accessible
+              # Yeh sabse important line hai
+              # localhost hota toh sirf container access kar sakta
+
+          # ── Volume Mount ─────────────────────────────────
+          volumeMounts:
+            - name: ollama-models-storage
+              mountPath: /root/.ollama  # Init container ne yahan save kiya tha
+
+          # ── Resources - Local Machine Ke Liye ────────────
+          resources:
+            requests:
+              cpu: "500m"        # Local ke liye 0.5 CPU kaafi
+              memory: "3Gi"      # llama2 ~3.8GB - 3Gi minimum
+            limits:
+              cpu: "2000m"       # Max 2 CPU cores
+              memory: "6Gi"      # Max 6GB RAM
+
+          # ── Health Checks ─────────────────────────────────
+          livenessProbe:
+            httpGet:
+              path: /api/tags
+              port: 11434
+            initialDelaySeconds: 120   # Model load hone ka time - 2 min wait
+            periodSeconds: 30
+            timeoutSeconds: 15
+            failureThreshold: 5        # 5 baar fail → restart
+
+          readinessProbe:
+            httpGet:
+              path: /api/tags
+              port: 11434
+            initialDelaySeconds: 60    # 1 min baad pehla check
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 3        # 3 fail → traffic mat bhejo
+
+      # ── Volumes ──────────────────────────────────────────
+      volumes:
+        - name: ollama-models-storage
+          persistentVolumeClaim:
+            claimName: ollama-models-pvc   # pvc.yaml se match
+
+      terminationGracePeriodSeconds: 60
