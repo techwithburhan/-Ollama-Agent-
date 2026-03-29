@@ -1153,8 +1153,24 @@ kubectl get ingress -n ollama-agent
 ## 🔌 Port Forwarding
 
 ```bash
-kubectl port-forward -n ingress-nginx \
-  svc/ingress-nginx-controller 8080:80
+kubectl port-forward svc/ollama-backend-service 5005:5005 -n ollama-agent
+curl http://localhost:5005/api/health
+```
+
+```bash
+kubectl port-forward svc/ollama-frontend-service 8080:80 -n ollama-agent
+# Open http://localhost:8080
+```
+
+```bash
+kubectl port-forward svc/ollama-backend-service 5005:5005 -n ollama-agent
+curl http://localhost:5005/api/health
+```
+
+```bash
+# If Ingress isn't working, port-forward directly
+kubectl port-forward svc/ollama-frontend-service 3000:80 -n ollama-agent
+# Open http://localhost:3000
 ```
 
 Access:
