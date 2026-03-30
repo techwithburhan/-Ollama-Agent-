@@ -6,27 +6,31 @@ metadata:
 data:
   nginx.conf: |
     worker_processes auto;
-
+ 
     events {
       worker_connections 1024;
     }
-
+ 
     http {
       include /etc/nginx/mime.types;
       default_type application/octet-stream;
-
+ 
       gzip on;
       gzip_types text/plain text/css application/json application/javascript;
-
+ 
       server {
         listen 80;
         root /usr/share/nginx/html;
         index index.html;
-
+ 
+        # ✅ React app — SPA fallback
         location / {
           try_files $uri $uri/ /index.html;
         }
-
+ 
+        # ✅ Proxy all /api/ calls to the backend service
+        # This eliminates CORS entirely — browser talks to same origin (nginx)
+        # nginx forwards to backend internally inside the cluster
         location /api/ {
           proxy_pass http://ollama-backend-service:5005/api/;
           proxy_http_version 1.1;
@@ -34,12 +38,68 @@ data:
           proxy_buffering off;
           proxy_set_header Host $host;
           proxy_set_header X-Real-IP $remote_addr;
+          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
           proxy_read_timeout 3600s;
+          proxy_send_timeout 3600s;
         }
-
+ 
         location /healthz {
           return 200 'ok';
           add_header Content-Type text/plain;
         }
       }
     }
+ 
+  .env: |
+    # ✅ Empty = React uses relative paths, nginx proxies to backend
+    REACT_APP_API_URL=
+    DANGEROUSLY_DISABLE_HOST_CHECK=true
+    WDS_SOCKET_HOST=54.173.206.159
+    WDS_SOCKET_PORT=3000
+    HOST=54.173.206.159
+
+# apiVersion: v1
+# kind: ConfigMap
+# metadata:
+#   name: ollama-frontend-config
+#   namespace: ollama-agent
+# data:
+#   nginx.conf: |
+#     worker_processes auto;
+
+#     events {
+#       worker_connections 1024;
+#     }
+
+#     http {
+#       include /etc/nginx/mime.types;
+#       default_type application/octet-stream;
+
+#       gzip on;
+#       gzip_types text/plain text/css application/json application/javascript;
+
+#       server {
+#         listen 80;
+#         root /usr/share/nginx/html;
+#         index index.html;
+
+#         location / {
+#           try_files $uri $uri/ /index.html;
+#         }
+
+#         location /api/ {
+#           proxy_pass http://ollama-backend-service:5005/api/;
+#           proxy_http_version 1.1;
+#           proxy_set_header Connection "";
+#           proxy_buffering off;
+#           proxy_set_header Host $host;
+#           proxy_set_header X-Real-IP $remote_addr;
+#           proxy_read_timeout 3600s;
+#         }
+
+#         location /healthz {
+#           return 200 'ok';
+#           add_header Content-Type text/plain;
+#         }
+#       }
+#     }
