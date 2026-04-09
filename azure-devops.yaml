@@ -1,0 +1,87 @@
+# =====================================================
+# Azure Pipeline - Agent Pilot Project
+# Author: techwithburhan
+# This pipeline builds and pushes Docker images
+# for the backend and frontend to Docker Hub
+# =====================================================
+
+# Run this pipeline when code is pushed to main branch
+trigger:
+  branches:
+    include:
+      - main
+
+# Use Ubuntu as the build machine
+pool:
+  vmImage: "ubuntu-latest"
+# But Here we used self-hosted agent because we need to build Docker images
+
+# ── Variables ─────────────────────────────────────────
+# Set DOCKERHUB_USERNAME and DOCKERHUB_PASSWORD
+# as secret variables in Azure DevOps Pipeline settings
+variables:
+  BACKEND_IMAGE: "burhan503/ollama-agent-backend"
+  FRONTEND_IMAGE: "burhan503/ollama-agent-frontend"
+  IMAGE_TAG: "$(Build.BuildId)"   # unique tag for each build e.g. 42
+
+# ── Steps ─────────────────────────────────────────────
+steps:
+
+  # Step 1: Login to Docker Hub
+  # Uses the credentials you set in pipeline variables
+  - task: Docker@2
+    displayName: "Login to Docker Hub"
+    inputs:
+      command: login
+      containerRegistry: "dockerhub-connection"  # create this service connection in Azure DevOps
+
+  # Step 2: Build the Backend Docker image
+  # Looks for Dockerfile inside the /backend folder
+  - task: Docker@2
+    displayName: "Build Backend Image"
+    inputs:
+      command: build
+      repository: $(BACKEND_IMAGE)
+      dockerfile: "backend/Dockerfile"
+      tags: |
+        $(IMAGE_TAG)
+        latest
+
+  # Step 3: Push the Backend image to Docker Hub
+  - task: Docker@2
+    displayName: "Push Backend Image"
+    inputs:
+      command: push
+      repository: $(BACKEND_IMAGE)
+      tags: |
+        $(IMAGE_TAG)
+        latest
+
+  # Step 4: Build the Frontend Docker image
+  # Looks for Dockerfile inside the /frontend folder
+  - task: Docker@2
+    displayName: "Build Frontend Image"
+    inputs:
+      command: build
+      repository: $(FRONTEND_IMAGE)
+      dockerfile: "frontend/Dockerfile"
+      tags: |
+        $(IMAGE_TAG)
+        latest
+
+  # Step 5: Push the Frontend image to Docker Hub
+  - task: Docker@2
+    displayName: "Push Frontend Image"
+    inputs:
+      command: push
+      repository: $(FRONTEND_IMAGE)
+      tags: |
+        $(IMAGE_TAG)
+        latest
+
+  # Step 6: Done! Print a success message
+  - script: |
+      echo "✅ Build complete!"
+      echo "Backend  → $(BACKEND_IMAGE):$(IMAGE_TAG)"
+      echo "Frontend → $(FRONTEND_IMAGE):$(IMAGE_TAG)"
+    displayName: "Build Summary"
